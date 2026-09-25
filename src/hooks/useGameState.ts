@@ -330,142 +330,152 @@ export function useGameState() {
     setState(prev => {
       // Helper to check if player is out of game (credits <= 10)
       const isPlayerEliminated = (p: Player) => p.credits <= 10;
-      const allEliminated = prev.players.every(isPlayerEliminated);
 
-      // Check win condition (First to 100 points)
-      // If at end of turn/round multiple players reached >= 100
-      const playersOver100 = prev.players.filter(p => p.score >= 100);
+      // Find the next eligible player with > 10 credits
+      let nextPlayerIndex = -1;
+      let roundIncrement = 0;
 
-      if (playersOver100.length === 1) {
-        // Single winner!
-        sounds.playVictory();
-        const winner = playersOver100[0];
-        const winLog = createLog(
-          'win',
-          `🎉 ${winner.name} reached ${winner.score} PTS and won the Tech Trivia Challenge!`,
-          winner.id,
-          winner.name
-        );
-        return {
-          ...prev,
-          activeCardId: null,
-          phase: 'GAME_OVER',
-          winnerId: winner.id,
-          history: [winLog, ...prev.history],
-        };
-      } else if (playersOver100.length > 1) {
-        // Multiple players scored 100+ at the same time: trigger Tie-Breaker!
-        sounds.playBuzzer();
-        const tiedIds = playersOver100.map(p => p.id);
-        const tieLog = createLog(
-          'tie',
-          `⚔️ TIE DETECTED! ${playersOver100.map(p => p.name).join(' & ')} scored 100+ points! Entering Tie-Breaker Phase.`
-        );
-        return {
-          ...prev,
-          activeCardId: null,
-          phase: 'TIE_BREAKER',
-          tiedPlayerIds: tiedIds,
-          tieBreakerIndex: 0,
-          history: [tieLog, ...prev.history],
-        };
-      }
-
-      // Check if all players have <= 10 credits (done/eliminated)
-      if (allEliminated) {
-        const sorted = [...prev.players].sort((a, b) => b.score - a.score);
-        const topScore = sorted[0].score;
-        const tiedTop = sorted.filter(p => p.score === topScore);
-
-        if (tiedTop.length > 1) {
-          // Tie detected between top scoring players! Trigger Tie-Breaker
-          sounds.playBuzzer();
-          const tiedIds = tiedTop.map(p => p.id);
-          const tieLog = createLog(
-            'tie',
-            `⚔️ ALL PLAYERS ELIMINATED (<= 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
-          );
-          return {
-            ...prev,
-            activeCardId: null,
-            phase: 'TIE_BREAKER',
-            tiedPlayerIds: tiedIds,
-            tieBreakerIndex: 0,
-            history: [tieLog, ...prev.history],
-          };
-        } else {
-          // Single highest score winner
-          sounds.playVictory();
-          const winner = sorted[0];
-          const winLog = createLog(
-            'win',
-            `🏆 All players reached <= 10 credits! ${winner.name} wins with the highest score of ${winner.score} PTS!`,
-            winner.id,
-            winner.name
-          );
-          return {
-            ...prev,
-            activeCardId: null,
-            phase: 'GAME_OVER',
-            winnerId: winner.id,
-            history: [winLog, ...prev.history],
-          };
-        }
-      }
-
-      // Check if all cards answered
-      const unmaskedCards = prev.cards.filter(c => c.status === 'masked');
-      if (unmaskedCards.length === 0) {
-        // Board exhausted, player with highest score wins, or tie
-        const sorted = [...prev.players].sort((a, b) => b.score - a.score);
-        const topScore = sorted[0].score;
-        const tied = sorted.filter(p => p.score === topScore);
-        if (tied.length > 1) {
-          const tiedIds = tied.map(p => p.id);
-          return {
-            ...prev,
-            activeCardId: null,
-            phase: 'TIE_BREAKER',
-            tiedPlayerIds: tiedIds,
-            tieBreakerIndex: 0,
-          };
-        } else {
-          sounds.playVictory();
-          return {
-            ...prev,
-            activeCardId: null,
-            phase: 'GAME_OVER',
-            winnerId: sorted[0].id,
-          };
-        }
-      }
-
-      // Advance to next active player whose credits > 10
-      let nextPlayerIndex = (prev.currentPlayerIndex + 1) % 4;
-      let roundsAdvanced = 0;
-      if (nextPlayerIndex === 0) roundsAdvanced += 1;
-
-      // Scan for next eligible player with > 10 credits
       for (let i = 1; i <= 4; i++) {
         const candidateIndex = (prev.currentPlayerIndex + i) % 4;
-        if (candidateIndex < (prev.currentPlayerIndex + i - 1) % 4) {
-          // wrapped around
+        if ((prev.currentPlayerIndex + i) >= 4 && roundIncrement === 0) {
+          roundIncrement = 1;
         }
-        if (prev.players[candidateIndex].credits > 10) {
+        if (!isPlayerEliminated(prev.players[candidateIndex])) {
           nextPlayerIndex = candidateIndex;
           break;
         }
-        if ((candidateIndex + 1) % 4 === 0) {
-          roundsAdvanced += 1;
+      }
+
+      // Check if all players are eliminated (<= 10 credits)
+      const allEliminated = nextPlayerIndex === -1;
+
+      // A round is complete if the next player wraps around (candidateIndex <= currentPlayerIndex)
+      // or if all players are eliminated.
+      const isRoundEnding = allEliminated || nextPlayerIndex <= prev.currentPlayerIndex;
+
+      // In round-based gameplay, we evaluate win / tie conditions when the round finishes:
+      if (isRoundEnding) {
+        // 1. Check if any players reached >= 100 points
+        const playersOver100 = prev.players.filter(p => p.score >= 100);
+
+        if (playersOver100.length > 0) {
+          // Sort players over 100 by score descending
+          const sortedWinners = [...playersOver100].sort((a, b) => b.score - a.score);
+          const topScore = sortedWinners[0].score;
+          const tiedTop = sortedWinners.filter(p => p.score === topScore);
+
+          if (tiedTop.length > 1) {
+            // Tie! Multiple players reached the top 100+ score in the same round
+            sounds.playBuzzer();
+            const tiedIds = tiedTop.map(p => p.id);
+            const tieLog = createLog(
+              'tie',
+              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Tie-Breaker Phase.`
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'TIE_BREAKER',
+              tiedPlayerIds: tiedIds,
+              tieBreakerIndex: 0,
+              history: [tieLog, ...prev.history],
+            };
+          } else {
+            // Single winner with 100+ points at round end
+            sounds.playVictory();
+            const winner = sortedWinners[0];
+            const winLog = createLog(
+              'win',
+              `🎉 Round ${prev.currentRound} complete! ${winner.name} won the Tech Trivia Challenge with ${winner.score} PTS!`,
+              winner.id,
+              winner.name
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'GAME_OVER',
+              winnerId: winner.id,
+              history: [winLog, ...prev.history],
+            };
+          }
+        }
+
+        // 2. Check if all players have <= 10 credits (everyone done)
+        if (allEliminated) {
+          const sorted = [...prev.players].sort((a, b) => b.score - a.score);
+          const topScore = sorted[0].score;
+          const tiedTop = sorted.filter(p => p.score === topScore);
+
+          if (tiedTop.length > 1) {
+            sounds.playBuzzer();
+            const tiedIds = tiedTop.map(p => p.id);
+            const tieLog = createLog(
+              'tie',
+              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'TIE_BREAKER',
+              tiedPlayerIds: tiedIds,
+              tieBreakerIndex: 0,
+              history: [tieLog, ...prev.history],
+            };
+          } else {
+            sounds.playVictory();
+            const winner = sorted[0];
+            const winLog = createLog(
+              'win',
+              `🏆 All players reached ≤ 10 credits! ${winner.name} wins with ${winner.score} PTS!`,
+              winner.id,
+              winner.name
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'GAME_OVER',
+              winnerId: winner.id,
+              history: [winLog, ...prev.history],
+            };
+          }
+        }
+
+        // 3. Check if all cards answered
+        const unmaskedCards = prev.cards.filter(c => c.status === 'masked');
+        if (unmaskedCards.length === 0) {
+          const sorted = [...prev.players].sort((a, b) => b.score - a.score);
+          const topScore = sorted[0].score;
+          const tied = sorted.filter(p => p.score === topScore);
+          if (tied.length > 1) {
+            const tiedIds = tied.map(p => p.id);
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'TIE_BREAKER',
+              tiedPlayerIds: tiedIds,
+              tieBreakerIndex: 0,
+            };
+          } else {
+            sounds.playVictory();
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'GAME_OVER',
+              winnerId: sorted[0].id,
+            };
+          }
         }
       }
+
+      // If not game over, advance to next player in rotation
+      const nextRound = nextPlayerIndex <= prev.currentPlayerIndex ? prev.currentRound + 1 : prev.currentRound;
 
       return {
         ...prev,
         activeCardId: null,
         phase: 'PLAYING',
         currentPlayerIndex: nextPlayerIndex,
-        currentRound: prev.currentRound + roundsAdvanced,
+        currentRound: nextRound,
       };
     });
   }, []);
@@ -477,26 +487,108 @@ export function useGameState() {
     sounds.playClick();
     setState(prev => {
       const currentP = prev.players[prev.currentPlayerIndex];
-      let nextPlayerIndex = (prev.currentPlayerIndex + 1) % 4;
-      let roundsAdvanced = nextPlayerIndex === 0 ? 1 : 0;
+      const isPlayerEliminated = (p: Player) => p.credits <= 10;
 
+      let nextPlayerIndex = -1;
       for (let i = 1; i <= 4; i++) {
         const candidateIndex = (prev.currentPlayerIndex + i) % 4;
-        if (prev.players[candidateIndex].credits > 10) {
+        if (!isPlayerEliminated(prev.players[candidateIndex])) {
           nextPlayerIndex = candidateIndex;
           break;
         }
-        if ((candidateIndex + 1) % 4 === 0) {
-          roundsAdvanced += 1;
+      }
+
+      const allEliminated = nextPlayerIndex === -1;
+      const isRoundEnding = allEliminated || nextPlayerIndex <= prev.currentPlayerIndex;
+      const log = createLog('pass', `${currentP.name} passed their turn.`, currentP.id, currentP.name);
+
+      if (isRoundEnding) {
+        const playersOver100 = prev.players.filter(p => p.score >= 100);
+        if (playersOver100.length > 0) {
+          const sortedWinners = [...playersOver100].sort((a, b) => b.score - a.score);
+          const topScore = sortedWinners[0].score;
+          const tiedTop = sortedWinners.filter(p => p.score === topScore);
+
+          if (tiedTop.length > 1) {
+            sounds.playBuzzer();
+            const tiedIds = tiedTop.map(p => p.id);
+            const tieLog = createLog(
+              'tie',
+              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Tie-Breaker Phase.`
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'TIE_BREAKER',
+              tiedPlayerIds: tiedIds,
+              tieBreakerIndex: 0,
+              history: [tieLog, log, ...prev.history],
+            };
+          } else {
+            sounds.playVictory();
+            const winner = sortedWinners[0];
+            const winLog = createLog(
+              'win',
+              `🎉 Round ${prev.currentRound} complete! ${winner.name} won the Tech Trivia Challenge with ${winner.score} PTS!`,
+              winner.id,
+              winner.name
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'GAME_OVER',
+              winnerId: winner.id,
+              history: [winLog, log, ...prev.history],
+            };
+          }
+        }
+
+        if (allEliminated) {
+          const sorted = [...prev.players].sort((a, b) => b.score - a.score);
+          const topScore = sorted[0].score;
+          const tiedTop = sorted.filter(p => p.score === topScore);
+
+          if (tiedTop.length > 1) {
+            sounds.playBuzzer();
+            const tiedIds = tiedTop.map(p => p.id);
+            const tieLog = createLog(
+              'tie',
+              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'TIE_BREAKER',
+              tiedPlayerIds: tiedIds,
+              tieBreakerIndex: 0,
+              history: [tieLog, log, ...prev.history],
+            };
+          } else {
+            sounds.playVictory();
+            const winner = sorted[0];
+            const winLog = createLog(
+              'win',
+              `🏆 All players reached ≤ 10 credits! ${winner.name} wins with ${winner.score} PTS!`,
+              winner.id,
+              winner.name
+            );
+            return {
+              ...prev,
+              activeCardId: null,
+              phase: 'GAME_OVER',
+              winnerId: winner.id,
+              history: [winLog, log, ...prev.history],
+            };
+          }
         }
       }
 
-      const log = createLog('pass', `${currentP.name} passed their turn.`, currentP.id, currentP.name);
+      const nextRound = nextPlayerIndex <= prev.currentPlayerIndex ? prev.currentRound + 1 : prev.currentRound;
 
       return {
         ...prev,
         currentPlayerIndex: nextPlayerIndex,
-        currentRound: prev.currentRound + roundsAdvanced,
+        currentRound: nextRound,
         history: [log, ...prev.history],
       };
     });

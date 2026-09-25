@@ -72,12 +72,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-2">
               <div className="flex items-center gap-2 text-zinc-100 font-semibold text-xs uppercase tracking-wider font-mono">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Scoring & Turns</span>
+                <span>Round-Based Format & Scoring</span>
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
-                <li>Rounds rotate in sequence: Player 1 → Player 2 → Player 3 → Player 4.</li>
-                <li>Answering correctly awards the full points value (20, 30, 40, or 50 PTS).</li>
-                <li>Answering incorrectly awards 0 points.</li>
+                <li>Gameplay is strictly <strong>round-based</strong>: in each round, every eligible player receives exactly one turn (Player 1 → Player 2 → Player 3 → Player 4).</li>
+                <li>Answering correctly awards the full points value (20, 30, 40, or 50 PTS). Answering incorrectly awards 0 points.</li>
+                <li>Win conditions and ties are evaluated <strong>at the completion of each round</strong>.</li>
+                <li>If 2 or more players reach <strong>100+ points in the same round</strong>, it is declared a tie and triggers the Championship Tie-Breaker phase!</li>
               </ul>
             </div>
           </div>
@@ -90,7 +91,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
               <p>
-                <strong>Tie-Breaker Phase:</strong> If multiple players score 100+ points at the same time, the system enters the Tie-Breaker Phase where tied contestants face high-difficulty questions.
+                <strong>Tie-Breaker Phase:</strong> When 2 or more contestants reach 100+ points in the same round (or tie on points when all credits run out), the system enters the Tie-Breaker Phase where tied contestants face high-difficulty questions.
               </p>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
                 <Zap className="w-4 h-4 shrink-0 mt-0.5" />

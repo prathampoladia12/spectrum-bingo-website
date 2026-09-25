@@ -229,6 +229,7 @@ export function App() {
       <GameOverModal
         isOpen={state.phase === 'GAME_OVER'}
         winnerId={state.winnerId}
+        tiedPlayerIds={state.tiedPlayerIds}
         players={state.players}
         onPlayAgain={resetGame}
       />

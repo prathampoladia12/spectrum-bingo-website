@@ -6,6 +6,7 @@ import { fireLocalizedConfetti } from '../utils/confetti';
 interface GameOverModalProps {
   isOpen: boolean;
   winnerId: number | null;
+  tiedPlayerIds?: number[];
   players: Player[];
   onPlayAgain: () => void;
 }
@@ -13,6 +14,7 @@ interface GameOverModalProps {
 export const GameOverModal: React.FC<GameOverModalProps> = ({
   isOpen,
   winnerId,
+  tiedPlayerIds = [],
   players,
   onPlayAgain,
 }) => {
@@ -26,7 +28,9 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
   if (!isOpen) return null;
 
-  const winner = players.find(p => p.id === winnerId) || players[0];
+  const isTie = winnerId === null && tiedPlayerIds.length > 1;
+  const tiedPlayers = players.filter(p => tiedPlayerIds.includes(p.id));
+  const winner = players.find(p => p.id === winnerId) || (tiedPlayers.length > 0 ? tiedPlayers[0] : players[0]);
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
@@ -36,20 +40,23 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         className="w-full max-w-xl rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Victory Header */}
+        {/* Victory / Tie Header */}
         <div className="p-8 text-center bg-gradient-to-b from-zinc-850 to-zinc-900 border-b border-zinc-800">
           <div className="inline-flex p-3 rounded-2xl bg-amber-400/10 border border-amber-400/30 text-amber-400 mb-4 animate-bounce">
             <Trophy className="w-8 h-8" />
           </div>
 
           <div className="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase mb-1">
-            Tournament Champion
+            {isTie ? 'Tournament Match Tied!' : 'Tournament Champion'}
           </div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2">
-            {winner.name} Wins!
+            {isTie ? `Tie Between ${tiedPlayers.map(p => p.name).join(' & ')}!` : `${winner.name} Wins!`}
           </h2>
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
-            Achieved {winner.score} Points with {winner.credits} Credits remaining!
+            {isTie 
+              ? `Both tied with ${tiedPlayers[0]?.score} Points at the end of the round!` 
+              : `Achieved ${winner.score} Points with ${winner.credits} Credits remaining!`
+            }
           </p>
         </div>
 
@@ -61,13 +68,13 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
           <div className="space-y-2">
             {sortedPlayers.map((player, idx) => {
-              const isWinner = player.id === winner.id;
+              const isHighlight = isTie ? tiedPlayerIds.includes(player.id) : player.id === winner.id;
               return (
                 <div
                   key={player.id}
                   className={`
                     p-3.5 rounded-xl border flex items-center justify-between transition-all
-                    ${isWinner 
+                    ${isHighlight 
                       ? 'bg-amber-950/20 border-amber-500/40 ring-1 ring-amber-500/20' 
                       : 'bg-zinc-950/40 border-zinc-850'
                     }
@@ -86,7 +93,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
                     <div>
                       <span className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5">
                         <span>{player.name}</span>
-                        {isWinner && <Award className="w-3.5 h-3.5 text-amber-400" />}
+                        {isHighlight && <Award className="w-3.5 h-3.5 text-amber-400" />}
                       </span>
                       <span className="text-[11px] font-mono text-zinc-400">
                         {player.correctCount} correct • {player.wrongCount} missed
