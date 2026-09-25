@@ -480,119 +480,7 @@ export function useGameState() {
     });
   }, []);
 
-  /**
-   * Pass turn if active player chooses to pass
-   */
-  const passTurn = useCallback(() => {
-    sounds.playClick();
-    setState(prev => {
-      const currentP = prev.players[prev.currentPlayerIndex];
-      const isPlayerEliminated = (p: Player) => p.credits <= 10;
 
-      let nextPlayerIndex = -1;
-      for (let i = 1; i <= 4; i++) {
-        const candidateIndex = (prev.currentPlayerIndex + i) % 4;
-        if (!isPlayerEliminated(prev.players[candidateIndex])) {
-          nextPlayerIndex = candidateIndex;
-          break;
-        }
-      }
-
-      const allEliminated = nextPlayerIndex === -1;
-      const isRoundEnding = allEliminated || nextPlayerIndex <= prev.currentPlayerIndex;
-      const log = createLog('pass', `${currentP.name} passed their turn.`, currentP.id, currentP.name);
-
-      if (isRoundEnding) {
-        const playersOver100 = prev.players.filter(p => p.score >= 100);
-        if (playersOver100.length > 0) {
-          const sortedWinners = [...playersOver100].sort((a, b) => b.score - a.score);
-          const topScore = sortedWinners[0].score;
-          const tiedTop = sortedWinners.filter(p => p.score === topScore);
-
-          if (tiedTop.length > 1) {
-            sounds.playBuzzer();
-            const tiedIds = tiedTop.map(p => p.id);
-            const tieLog = createLog(
-              'tie',
-              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Tie-Breaker Phase.`
-            );
-            return {
-              ...prev,
-              activeCardId: null,
-              phase: 'TIE_BREAKER',
-              tiedPlayerIds: tiedIds,
-              tieBreakerIndex: 0,
-              history: [tieLog, log, ...prev.history],
-            };
-          } else {
-            sounds.playVictory();
-            const winner = sortedWinners[0];
-            const winLog = createLog(
-              'win',
-              `🎉 Round ${prev.currentRound} complete! ${winner.name} won the Tech Trivia Challenge with ${winner.score} PTS!`,
-              winner.id,
-              winner.name
-            );
-            return {
-              ...prev,
-              activeCardId: null,
-              phase: 'GAME_OVER',
-              winnerId: winner.id,
-              history: [winLog, log, ...prev.history],
-            };
-          }
-        }
-
-        if (allEliminated) {
-          const sorted = [...prev.players].sort((a, b) => b.score - a.score);
-          const topScore = sorted[0].score;
-          const tiedTop = sorted.filter(p => p.score === topScore);
-
-          if (tiedTop.length > 1) {
-            sounds.playBuzzer();
-            const tiedIds = tiedTop.map(p => p.id);
-            const tieLog = createLog(
-              'tie',
-              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
-            );
-            return {
-              ...prev,
-              activeCardId: null,
-              phase: 'TIE_BREAKER',
-              tiedPlayerIds: tiedIds,
-              tieBreakerIndex: 0,
-              history: [tieLog, log, ...prev.history],
-            };
-          } else {
-            sounds.playVictory();
-            const winner = sorted[0];
-            const winLog = createLog(
-              'win',
-              `🏆 All players reached ≤ 10 credits! ${winner.name} wins with ${winner.score} PTS!`,
-              winner.id,
-              winner.name
-            );
-            return {
-              ...prev,
-              activeCardId: null,
-              phase: 'GAME_OVER',
-              winnerId: winner.id,
-              history: [winLog, log, ...prev.history],
-            };
-          }
-        }
-      }
-
-      const nextRound = nextPlayerIndex <= prev.currentPlayerIndex ? prev.currentRound + 1 : prev.currentRound;
-
-      return {
-        ...prev,
-        currentPlayerIndex: nextPlayerIndex,
-        currentRound: nextRound,
-        history: [log, ...prev.history],
-      };
-    });
-  }, []);
 
   /**
    * Submit Tie-Breaker Answer
@@ -768,7 +656,6 @@ export function useGameState() {
     unlockCard,
     submitAnswer,
     closeQuestionModal,
-    passTurn,
     submitTieBreakerAnswer,
     buzzInFFF,
     submitFFFAnswer,

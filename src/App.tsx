@@ -35,7 +35,6 @@ export function App() {
     unlockCard,
     submitAnswer,
     closeQuestionModal,
-    passTurn,
     submitTieBreakerAnswer,
     buzzInFFF,
     submitFFFAnswer,
@@ -86,7 +85,6 @@ export function App() {
         onReset={resetGame}
         onOpenRules={() => setIsRulesOpen(true)}
         onOpenHistory={() => setIsHistoryOpen(true)}
-        onPassTurn={passTurn}
       />
 
       {/* Main Game Canvas */}

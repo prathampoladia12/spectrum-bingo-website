@@ -65,7 +65,6 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 <li>Credits are <strong>subtracted for every attempt</strong> regardless of result.</li>
                 <li>A player who reaches <strong>10 or fewer Credits</strong> is done and will not receive further turns.</li>
                 <li>If all players reach <strong>10 or 0 Credits</strong>, the winner is determined by points earned. If points are tied, a Tie-Breaker is triggered!</li>
-                <li>If a player wishes to skip their turn, they can <strong>Pass Turn</strong>.</li>
               </ul>
             </div>
 

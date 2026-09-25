@@ -16,7 +16,6 @@ interface HeaderProps {
   onReset: () => void;
   onOpenRules: () => void;
   onOpenHistory: () => void;
-  onPassTurn: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,7 +24,6 @@ export const Header: React.FC<HeaderProps> = ({
   onReset,
   onOpenRules,
   onOpenHistory,
-  onPassTurn,
 }) => {
   const [isMuted, setIsMuted] = useState<boolean>(sounds.getMuted());
 
@@ -87,14 +85,6 @@ export const Header: React.FC<HeaderProps> = ({
               ({activePlayer.credits} CR left)
             </span>
           </div>
-
-          <button
-            onClick={onPassTurn}
-            className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 transition-colors cursor-pointer"
-            title="Pass turn to next player"
-          >
-            Pass Turn
-          </button>
         </div>
 
         {/* Right Actions */}
