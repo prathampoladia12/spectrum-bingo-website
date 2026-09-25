@@ -155,7 +155,7 @@ export const GameCard: React.FC<GameCardProps> = ({
             <div className="w-full flex items-center justify-between text-zinc-400 group-hover:text-zinc-200 transition-colors">
               <span className="flex items-center gap-1 text-[11px] font-medium">
                 <Coins className="w-3.5 h-3.5 text-amber-400/90" />
-                <span>Risk: <span className="font-semibold text-zinc-200">-{card.cost} CR</span> <span className="text-[9px] text-zinc-400">(on miss)</span></span>
+                <span>Cost: <span className="font-semibold text-zinc-200">-{card.cost} CR</span></span>
               </span>
               <span className="text-[10px] font-mono uppercase bg-zinc-800/80 px-2 py-0.5 rounded text-zinc-300 border border-zinc-700/50">
                 Reveal
@@ -165,7 +165,7 @@ export const GameCard: React.FC<GameCardProps> = ({
             <div className="w-full flex items-center justify-between text-rose-400/80">
               <span className="flex items-center gap-1 text-[11px]">
                 <Lock className="w-3.5 h-3.5" />
-                <span>Risk: {card.cost} CR</span>
+                <span>Cost: {card.cost} CR</span>
               </span>
               <span className="text-[9px] font-mono uppercase bg-rose-500/10 text-rose-400 px-1.5 py-0.5 rounded border border-rose-500/20">
                 Needs {card.cost} CR

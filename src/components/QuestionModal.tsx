@@ -155,7 +155,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
             )}
 
             <div className="text-[11px] font-mono bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-700/60 text-zinc-400">
-              Risk: <span className="text-amber-400 font-semibold">-{card.cost} CR</span> <span className="text-zinc-500 text-[10px]">(only if wrong)</span>
+              Cost: <span className="text-amber-400 font-semibold">-{card.cost} CR</span>
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                       className="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-md shadow-emerald-500/10"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>Correct (+{card.points} PTS) [C]</span>
+                      <span>Correct (+{card.points} PTS, -{card.cost} CR) [C]</span>
                     </button>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                 <div className="space-y-0.5">
                   <div className="font-semibold text-sm">
                     {evaluationResult 
-                      ? `Verified Correct! +${card.points} PTS awarded to ${activePlayer.name}. (Credits intact)` 
+                      ? `Verified Correct! +${card.points} PTS awarded to ${activePlayer.name} (-${card.cost} CR).` 
                       : `Verified Incorrect. -${card.cost} CR deducted from ${activePlayer.name}.`}
                   </div>
                   <div className="text-xs text-zinc-300">

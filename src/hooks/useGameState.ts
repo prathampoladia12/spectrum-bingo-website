@@ -242,7 +242,7 @@ export function useGameState() {
 
       const log = createLog(
         'unlock',
-        `${currentP.name} revealed ${card.category} for ${card.points} PTS (Risk: ${card.cost} CR if incorrect)`,
+        `${currentP.name} revealed ${card.category} for ${card.points} PTS (Cost: ${card.cost} CR)`,
         currentP.id,
         currentP.name
       );
@@ -261,7 +261,7 @@ export function useGameState() {
 
   /**
    * Verify an answer submitted by the player
-   * Deducts credits ONLY if answered incorrectly!
+   * Deducts credits regardless of correct or incorrect result
    */
   const submitAnswer = useCallback((isCorrect: boolean) => {
     if (!state.activeCardId) return;
@@ -283,8 +283,8 @@ export function useGameState() {
           return {
             ...p,
             score: isCorrect ? p.score + card.points : p.score,
-            credits: isCorrect ? p.credits : Math.max(0, p.credits - card.cost),
-            totalSpent: isCorrect ? p.totalSpent : p.totalSpent + card.cost,
+            credits: Math.max(0, p.credits - card.cost),
+            totalSpent: p.totalSpent + card.cost,
             correctCount: isCorrect ? p.correctCount + 1 : p.correctCount,
             wrongCount: !isCorrect ? p.wrongCount + 1 : p.wrongCount,
           };
@@ -306,12 +306,12 @@ export function useGameState() {
       const log = createLog(
         isCorrect ? 'correct' : 'wrong',
         isCorrect
-          ? `${player.name} answered correctly! (+${card.points} PTS, credits kept)`
+          ? `${player.name} answered correctly! (+${card.points} PTS, -${card.cost} CR)`
           : `${player.name} answered incorrectly. (-${card.cost} CR)`,
         player.id,
         player.name,
         isCorrect ? card.points : 0,
-        isCorrect ? 0 : -card.cost
+        -card.cost
       );
 
       return {
@@ -328,10 +328,9 @@ export function useGameState() {
    */
   const closeQuestionModal = useCallback(() => {
     setState(prev => {
-      // Advance to next player
-      const nextPlayerIndex = (prev.currentPlayerIndex + 1) % 4;
-      const isRoundComplete = nextPlayerIndex === 0;
-      const nextRound = isRoundComplete ? prev.currentRound + 1 : prev.currentRound;
+      // Helper to check if player is out of game (credits <= 10)
+      const isPlayerEliminated = (p: Player) => p.credits <= 10;
+      const allEliminated = prev.players.every(isPlayerEliminated);
 
       // Check win condition (First to 100 points)
       // If at end of turn/round multiple players reached >= 100
@@ -372,18 +371,62 @@ export function useGameState() {
         };
       }
 
+      // Check if all players have <= 10 credits (done/eliminated)
+      if (allEliminated) {
+        const sorted = [...prev.players].sort((a, b) => b.score - a.score);
+        const topScore = sorted[0].score;
+        const tiedTop = sorted.filter(p => p.score === topScore);
+
+        if (tiedTop.length > 1) {
+          // Tie detected between top scoring players! Trigger Tie-Breaker
+          sounds.playBuzzer();
+          const tiedIds = tiedTop.map(p => p.id);
+          const tieLog = createLog(
+            'tie',
+            `⚔️ ALL PLAYERS ELIMINATED (<= 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
+          );
+          return {
+            ...prev,
+            activeCardId: null,
+            phase: 'TIE_BREAKER',
+            tiedPlayerIds: tiedIds,
+            tieBreakerIndex: 0,
+            history: [tieLog, ...prev.history],
+          };
+        } else {
+          // Single highest score winner
+          sounds.playVictory();
+          const winner = sorted[0];
+          const winLog = createLog(
+            'win',
+            `🏆 All players reached <= 10 credits! ${winner.name} wins with the highest score of ${winner.score} PTS!`,
+            winner.id,
+            winner.name
+          );
+          return {
+            ...prev,
+            activeCardId: null,
+            phase: 'GAME_OVER',
+            winnerId: winner.id,
+            history: [winLog, ...prev.history],
+          };
+        }
+      }
+
       // Check if all cards answered
       const unmaskedCards = prev.cards.filter(c => c.status === 'masked');
       if (unmaskedCards.length === 0) {
         // Board exhausted, player with highest score wins, or tie
         const sorted = [...prev.players].sort((a, b) => b.score - a.score);
-        if (sorted[0].score === sorted[1].score && sorted[0].score > 0) {
-          const tied = sorted.filter(p => p.score === sorted[0].score).map(p => p.id);
+        const topScore = sorted[0].score;
+        const tied = sorted.filter(p => p.score === topScore);
+        if (tied.length > 1) {
+          const tiedIds = tied.map(p => p.id);
           return {
             ...prev,
             activeCardId: null,
             phase: 'TIE_BREAKER',
-            tiedPlayerIds: tied,
+            tiedPlayerIds: tiedIds,
             tieBreakerIndex: 0,
           };
         } else {
@@ -397,12 +440,32 @@ export function useGameState() {
         }
       }
 
+      // Advance to next active player whose credits > 10
+      let nextPlayerIndex = (prev.currentPlayerIndex + 1) % 4;
+      let roundsAdvanced = 0;
+      if (nextPlayerIndex === 0) roundsAdvanced += 1;
+
+      // Scan for next eligible player with > 10 credits
+      for (let i = 1; i <= 4; i++) {
+        const candidateIndex = (prev.currentPlayerIndex + i) % 4;
+        if (candidateIndex < (prev.currentPlayerIndex + i - 1) % 4) {
+          // wrapped around
+        }
+        if (prev.players[candidateIndex].credits > 10) {
+          nextPlayerIndex = candidateIndex;
+          break;
+        }
+        if ((candidateIndex + 1) % 4 === 0) {
+          roundsAdvanced += 1;
+        }
+      }
+
       return {
         ...prev,
         activeCardId: null,
         phase: 'PLAYING',
         currentPlayerIndex: nextPlayerIndex,
-        currentRound: nextRound,
+        currentRound: prev.currentRound + roundsAdvanced,
       };
     });
   }, []);
@@ -414,16 +477,26 @@ export function useGameState() {
     sounds.playClick();
     setState(prev => {
       const currentP = prev.players[prev.currentPlayerIndex];
-      const nextIndex = (prev.currentPlayerIndex + 1) % 4;
-      const isRoundComplete = nextIndex === 0;
-      const nextRound = isRoundComplete ? prev.currentRound + 1 : prev.currentRound;
+      let nextPlayerIndex = (prev.currentPlayerIndex + 1) % 4;
+      let roundsAdvanced = nextPlayerIndex === 0 ? 1 : 0;
+
+      for (let i = 1; i <= 4; i++) {
+        const candidateIndex = (prev.currentPlayerIndex + i) % 4;
+        if (prev.players[candidateIndex].credits > 10) {
+          nextPlayerIndex = candidateIndex;
+          break;
+        }
+        if ((candidateIndex + 1) % 4 === 0) {
+          roundsAdvanced += 1;
+        }
+      }
 
       const log = createLog('pass', `${currentP.name} passed their turn.`, currentP.id, currentP.name);
 
       return {
         ...prev,
-        currentPlayerIndex: nextIndex,
-        currentRound: nextRound,
+        currentPlayerIndex: nextPlayerIndex,
+        currentRound: prev.currentRound + roundsAdvanced,
         history: [log, ...prev.history],
       };
     });
@@ -587,10 +660,13 @@ export function useGameState() {
    */
   const setCurrentPlayer = useCallback((playerIndex: number) => {
     sounds.playClick();
-    setState(prev => ({
-      ...prev,
-      currentPlayerIndex: playerIndex,
-    }));
+    setState(prev => {
+      if (prev.players[playerIndex]?.credits <= 10) return prev;
+      return {
+        ...prev,
+        currentPlayerIndex: playerIndex,
+      };
+    });
   }, []);
 
   return {

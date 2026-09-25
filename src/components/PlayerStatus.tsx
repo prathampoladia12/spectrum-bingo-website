@@ -31,29 +31,38 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({
 
   const scorePercentage = Math.min(100, Math.round((player.score / 100) * 100));
   const creditPercentage = Math.min(100, Math.max(0, player.credits));
+  const isOutOfCredits = player.credits <= 10;
 
   return (
     <div
       ref={cardRef}
-      onClick={() => onSelectPlayer && onSelectPlayer(index)}
+      onClick={() => !isOutOfCredits && onSelectPlayer && onSelectPlayer(index)}
       className={`
         relative rounded-xl p-4 transition-all duration-300 border backdrop-blur-md select-none
-        ${isActive
-          ? 'bg-zinc-900/90 border-zinc-500/80 shadow-lg shadow-black/40 ring-1 ring-white/10'
-          : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700/80 hover:bg-zinc-900/60'
+        ${isOutOfCredits
+          ? 'bg-zinc-950/60 border-zinc-800/40 opacity-60 cursor-not-allowed'
+          : isActive
+            ? 'bg-zinc-900/90 border-zinc-500/80 shadow-lg shadow-black/40 ring-1 ring-white/10'
+            : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700/80 hover:bg-zinc-900/60'
         }
         ${highlightScored ? 'animate-pulse ring-2 ring-emerald-500/80' : ''}
       `}
     >
-      {/* Active turn badge */}
-      {isActive && (
+      {/* Active turn badge or Out of credits badge */}
+      {isOutOfCredits ? (
+        <div className="absolute -top-2.5 right-4 z-20">
+          <span className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-800 text-rose-400 border border-rose-500/30 shadow-md">
+            Done (≤ 10 CR)
+          </span>
+        </div>
+      ) : isActive ? (
         <div className="absolute -top-2.5 right-4 z-20">
           <span className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white text-zinc-950 shadow-md">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
             Turn Active
           </span>
         </div>
-      )}
+      ) : null}
 
       {/* Header: Avatar, Name & Turn Chip */}
       <div className="flex items-center justify-between gap-3 mb-3">

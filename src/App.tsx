@@ -180,7 +180,7 @@ export function App() {
               <span>Reactive Board Sync: Active</span>
             </span>
             <span>•</span>
-            <span>Penalty: Deducted only on incorrect answer</span>
+            <span>Credits: Deducted on every attempt • ≤ 10 CR done</span>
           </div>
 
           <div className="flex items-center gap-3">

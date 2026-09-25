@@ -61,10 +61,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
                 <li>Every player starts with <strong>100 Credits</strong>.</li>
-                <li>Attempting a question puts credits at risk equal to its point value (20, 30, 40, or 50 CR).</li>
-                <li>Credits are <strong>subtracted only if answered incorrectly</strong>.</li>
-                <li>A player <strong>cannot attempt</strong> a question if their remaining credits are less than its cost.</li>
-                <li>If a player has insufficient credits or wishes to skip, they can <strong>Pass Turn</strong>.</li>
+                <li>Attempting a question costs credits equal to its point value (20, 30, 40, or 50 CR).</li>
+                <li>Credits are <strong>subtracted for every attempt</strong> regardless of result.</li>
+                <li>A player who reaches <strong>10 or fewer Credits</strong> is done and will not receive further turns.</li>
+                <li>If all players reach <strong>10 or 0 Credits</strong>, the winner is determined by points earned. If points are tied, a Tie-Breaker is triggered!</li>
+                <li>If a player wishes to skip their turn, they can <strong>Pass Turn</strong>.</li>
               </ul>
             </div>
 
@@ -75,8 +76,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
                 <li>Rounds rotate in sequence: Player 1 → Player 2 → Player 3 → Player 4.</li>
-                <li>Answering correctly awards the full points value (20, 30, 40, or 50 PTS) with <strong>zero credit penalty</strong>.</li>
-                <li>Answering incorrectly awards 0 points and deducts the question's credit cost.</li>
+                <li>Answering correctly awards the full points value (20, 30, 40, or 50 PTS).</li>
+                <li>Answering incorrectly awards 0 points.</li>
               </ul>
             </div>
           </div>
