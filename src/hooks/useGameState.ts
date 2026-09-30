@@ -6,10 +6,10 @@ import type {
   CardStatus,
   LogEntry 
 } from '../types/game';
-import { INITIAL_QUESTIONS, TIE_BREAKER_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
+import { INITIAL_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v3';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v4';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -416,14 +416,15 @@ export function useGameState() {
             const tiedIds = tiedTop.map(p => p.id);
             const tieLog = createLog(
               'tie',
-              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Tie-Breaker Phase.`
+              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Fastest Finger First Sudden Death!`
             );
             return {
               ...prev,
               activeCardId: null,
-              phase: 'TIE_BREAKER',
+              phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              tieBreakerIndex: 0,
+              fffQuestion: FFF_QUESTIONS[0],
+              fffBuzzedPlayerId: null,
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -457,14 +458,15 @@ export function useGameState() {
             const tiedIds = tiedTop.map(p => p.id);
             const tieLog = createLog(
               'tie',
-              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Tie-Breaker Phase.`
+              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death!`
             );
             return {
               ...prev,
               activeCardId: null,
-              phase: 'TIE_BREAKER',
+              phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              tieBreakerIndex: 0,
+              fffQuestion: FFF_QUESTIONS[0],
+              fffBuzzedPlayerId: null,
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -494,12 +496,18 @@ export function useGameState() {
           const tied = sorted.filter(p => p.score === topScore);
           if (tied.length > 1) {
             const tiedIds = tied.map(p => p.id);
+            const tieLog = createLog(
+              'tie',
+              `⚔️ ALL SQUARES COMPLETED! Tie at ${topScore} PTS between ${tied.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death!`
+            );
             return {
               ...prev,
               activeCardId: null,
-              phase: 'TIE_BREAKER',
+              phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              tieBreakerIndex: 0,
+              fffQuestion: FFF_QUESTIONS[0],
+              fffBuzzedPlayerId: null,
+              history: [tieLog, ...prev.history],
             };
           } else {
             sounds.playVictory();
@@ -527,81 +535,6 @@ export function useGameState() {
   }, []);
 
 
-
-  /**
-   * Submit Tie-Breaker Answer
-   */
-  const submitTieBreakerAnswer = useCallback((playerId: number, isCorrect: boolean) => {
-    if (isCorrect) {
-      sounds.playCorrect();
-    } else {
-      sounds.playWrong();
-    }
-
-    setState(prev => {
-      const newScores = {
-        ...prev.tieBreakerScores,
-        [playerId]: (prev.tieBreakerScores[playerId] || 0) + (isCorrect ? 50 : 0),
-      };
-
-      const nextTBIndex = prev.tieBreakerIndex + 1;
-      const player = prev.players.find(p => p.id === playerId);
-
-      const log = createLog(
-        isCorrect ? 'correct' : 'wrong',
-        `Tie-Breaker: ${player?.name} answered ${isCorrect ? 'CORRECTLY (+50 TB PTS)' : 'INCORRECTLY (0 TB PTS)'}`,
-        playerId,
-        player?.name
-      );
-
-      // Check if tie breaker questions exhausted
-      if (nextTBIndex >= TIE_BREAKER_QUESTIONS.length) {
-        // Evaluate tie-breaker winner or escalate to FFF
-        const tiedPlayerScores = prev.tiedPlayerIds.map(id => ({ id, score: newScores[id] || 0 }));
-        tiedPlayerScores.sort((a, b) => b.score - a.score);
-
-        if (tiedPlayerScores[0].score > tiedPlayerScores[1].score) {
-          // Clean tie-breaker winner!
-          sounds.playVictory();
-          const winner = prev.players.find(p => p.id === tiedPlayerScores[0].id);
-          return {
-            ...prev,
-            tieBreakerScores: newScores,
-            phase: 'GAME_OVER',
-            winnerId: tiedPlayerScores[0].id,
-            history: [
-              createLog('win', `🏆 ${winner?.name} won the Tie-Breaker!`, winner?.id, winner?.name),
-              log,
-              ...prev.history,
-            ],
-          };
-        } else {
-          // Still tied! Reference image rule:
-          // "if tie-breaker Qs also finished then fff [fastest finger first]"
-          sounds.playBuzzer();
-          return {
-            ...prev,
-            tieBreakerScores: newScores,
-            phase: 'SUDDEN_DEATH_FFF',
-            fffQuestion: FFF_QUESTIONS[0],
-            fffBuzzedPlayerId: null,
-            history: [
-              createLog('info', '⚔️ Tie-breaker score tied! Escalating to Fastest Finger First (FFF) Sudden Death!'),
-              log,
-              ...prev.history,
-            ],
-          };
-        }
-      }
-
-      return {
-        ...prev,
-        tieBreakerScores: newScores,
-        tieBreakerIndex: nextTBIndex,
-        history: [log, ...prev.history],
-      };
-    });
-  }, []);
 
   /**
    * Buzzer in for Fastest Finger First (FFF)
@@ -702,12 +635,10 @@ export function useGameState() {
     unlockCard,
     submitAnswer,
     closeQuestionModal,
-    submitTieBreakerAnswer,
     buzzInFFF,
     submitFFFAnswer,
     resetGame,
     setCurrentPlayer,
     activeCard: state.cards.find(c => c.id === state.activeCardId) || null,
-    currentTieBreakerQuestion: TIE_BREAKER_QUESTIONS[state.tieBreakerIndex] || null,
   };
 }

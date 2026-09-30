@@ -4,7 +4,6 @@ import { Header } from './components/Header';
 import { PlayerStatus } from './components/PlayerStatus';
 import { GameCard } from './components/GameCard';
 import { QuestionModal } from './components/QuestionModal';
-import { TieBreakerModal } from './components/TieBreakerModal';
 import { SuddenDeathFFF } from './components/SuddenDeathFFF';
 import { GameOverModal } from './components/GameOverModal';
 import { RulesModal } from './components/RulesModal';
@@ -39,13 +38,11 @@ export function App() {
     unlockCard,
     submitAnswer,
     closeQuestionModal,
-    submitTieBreakerAnswer,
     buzzInFFF,
     submitFFFAnswer,
     resetGame,
     setCurrentPlayer,
     activeCard,
-    currentTieBreakerQuestion,
   } = useGameState();
 
   const [isRulesOpen, setIsRulesOpen] = useState(false);
@@ -191,7 +188,7 @@ export function App() {
               className="hover:text-zinc-200 transition-colors cursor-pointer flex items-center gap-1"
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>Tie-Breaker & FFF Rules</span>
+              <span>Fastest Finger First Rules</span>
             </button>
           </div>
         </div>
@@ -206,18 +203,7 @@ export function App() {
         onClose={closeQuestionModal}
       />
 
-      {/* Tie-Breaker Modal (Multi-player 100+ points tie) */}
-      <TieBreakerModal
-        isOpen={state.phase === 'TIE_BREAKER'}
-        question={currentTieBreakerQuestion}
-        tiedPlayers={tiedPlayers}
-        tieBreakerScores={state.tieBreakerScores}
-        tieBreakerIndex={state.tieBreakerIndex}
-        totalTieBreakers={4}
-        onSubmitAnswer={submitTieBreakerAnswer}
-      />
-
-      {/* Fastest Finger First Sudden Death */}
+      {/* Fastest Finger First Sudden Death (Exclusive Tie-Breaker) */}
       <SuddenDeathFFF
         isOpen={state.phase === 'SUDDEN_DEATH_FFF'}
         question={state.fffQuestion}

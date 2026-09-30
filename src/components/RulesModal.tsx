@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BookOpen, Coins, Trophy, Swords, Zap, CheckCircle2 } from 'lucide-react';
+import { X, BookOpen, Coins, Trophy, Zap, CheckCircle2 } from 'lucide-react';
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -82,20 +82,20 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Section 3: Tie-Breaker & FFF Sudden Death */}
+          {/* Section 3: Tie-Breaker (Fastest Finger First) */}
           <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
             <div className="flex items-center gap-2 text-zinc-100 font-semibold text-xs uppercase tracking-wider font-mono">
-              <Swords className="w-4 h-4 text-purple-400" />
-              <span>Tie-Breaker & Fastest Finger First (FFF)</span>
+              <Zap className="w-4 h-4 text-rose-400" />
+              <span>Tie-Breaker: Fastest Finger First (FFF) Sudden Death</span>
             </div>
             <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
               <p>
-                <strong>Tie-Breaker Phase:</strong> When 2 or more contestants reach 100+ points in the same round (or tie on points when all credits run out), the system enters the Tie-Breaker Phase where tied contestants face high-difficulty questions.
+                When 2 or more contestants reach 100+ points in the same round (or tie on points when all credits run out), the match immediately enters <strong>Fastest Finger First (FFF) Sudden Death</strong>.
               </p>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
                 <Zap className="w-4 h-4 shrink-0 mt-0.5" />
                 <p>
-                  <strong>Fastest Finger First (FFF) Sudden Death:</strong> If the tie-breaker questions conclude in an exact tie, the match escalates to FFF Sudden Death. The first tied player to strike their buzzer button (or press Keys 1–4) gets 10 seconds to answer for an instant victory!
+                  <strong>Single Deciding Question:</strong> Exactly 1 high-stakes question is presented. The first tied player to strike their buzzer button (or press their number key) gets 10 seconds to answer. A correct answer wins the entire championship instantly! If missed, the remaining tied players get to buzz in.
                 </p>
               </div>
             </div>

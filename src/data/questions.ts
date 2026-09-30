@@ -245,64 +245,15 @@ export const INITIAL_QUESTIONS: QuestionItem[] = [
   },
 ];
 
-// Tie-breaker questions for when multiple players reach 100+ points simultaneously
-export const TIE_BREAKER_QUESTIONS: QuestionItem[] = [
-  {
-    id: 'tb_01',
-    category: 'DSA',
-    points: 50,
-    cost: 0,
-    question_text: 'Tie-Breaker: What is the amortized time complexity of inserting an item into a dynamic array (like std::vector or ArrayList) that doubles its capacity upon reaching limit?',
-    answer: 'O(1) amortized',
-    explanation: 'While resizing takes O(N) when copying elements to a doubled buffer, this happens exponentially infrequently. The cost spread over N operations yields O(1) amortized time per insertion.',
-  },
-  {
-    id: 'tb_02',
-    category: 'AI/ML',
-    points: 50,
-    cost: 0,
-    question_text: 'Tie-Breaker: Which positional encoding strategy allows Transformers to generalize cleanly to sequence lengths unseen during training through rotational matrices?',
-    answer: 'RoPE (Rotary Position Embedding)',
-    explanation: 'RoPE encodes relative position by multiplying query and key representations by a rotation matrix, naturally enabling decaying self-attention with relative distance and superior length extrapolation.',
-  },
-  {
-    id: 'tb_03',
-    category: 'WSD',
-    points: 50,
-    cost: 0,
-    question_text: 'Tie-Breaker: What distributed consensus algorithm uses leader election and replicated state machines, designed specifically to be more understandable than Paxos?',
-    answer: 'Raft',
-    explanation: 'Raft decomposes distributed consensus into leader election, log replication, and safety, designed by Ongaro & Ousterhout explicitly for comprehensibility compared to Paxos.',
-  },
-  {
-    id: 'tb_04',
-    category: 'PROGRAMMING',
-    points: 50,
-    cost: 0,
-    question_text: 'Tie-Breaker: In functional programming, what is the term for transforming a function that takes multiple arguments into a chain of functions that each take a single argument?',
-    answer: 'Currying',
-    explanation: 'Currying transforms f(a, b, c) into f(a)(b)(c), named after logician Haskell Curry.',
-  },
-];
-
-// Sudden Death / Fastest Finger First questions
+// Sudden Death / Fastest Finger First questions (Only 1 question used for Tie-Breaker)
 export const FFF_QUESTIONS: QuestionItem[] = [
   {
     id: 'fff_01',
     category: 'PROGRAMMING',
     points: 100,
     cost: 0,
-    question_text: 'SUDDEN DEATH: What is the output of typeof null in JavaScript?',
+    question_text: 'FASTEST FINGER FIRST (SUDDEN DEATH): What is the output of typeof null in JavaScript?',
     answer: '"object"',
     explanation: 'typeof null returning "object" is a historic bug in the original 1995 JavaScript implementation caused by the type tag for objects being 000 in memory, which null shared.',
-  },
-  {
-    id: 'fff_02',
-    category: 'DSA',
-    points: 100,
-    cost: 0,
-    question_text: 'SUDDEN DEATH: What is the minimum number of comparisons needed to find both the minimum and maximum of an array of N elements?',
-    answer: '⌈3N/2⌉ - 2 comparisons',
-    explanation: 'By comparing elements in pairs and then comparing the smaller with the min and the larger with the max, we need only 3 comparisons for every 2 elements: ⌈3N/2⌉ - 2 comparisons.',
   },
 ];

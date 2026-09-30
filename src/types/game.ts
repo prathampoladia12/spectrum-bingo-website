@@ -42,7 +42,6 @@ export interface Player {
 export type GamePhase = 
   | 'PLAYING' 
   | 'QUESTION_MODAL' 
-  | 'TIE_BREAKER' 
   | 'SUDDEN_DEATH_FFF' 
   | 'GAME_OVER';
 
