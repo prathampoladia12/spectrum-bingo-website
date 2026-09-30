@@ -9,7 +9,7 @@ import type {
 import { INITIAL_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v4';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v5';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -328,8 +328,8 @@ export function useGameState() {
           return {
             ...p,
             score: isCorrect ? p.score + card.points : p.score,
-            credits: isCorrect ? p.credits : Math.max(0, p.credits - card.cost),
-            totalSpent: !isCorrect ? p.totalSpent + card.cost : p.totalSpent,
+            credits: Math.max(0, p.credits - card.cost),
+            totalSpent: p.totalSpent + card.cost,
             correctCount: isCorrect ? p.correctCount + 1 : p.correctCount,
             wrongCount: !isCorrect ? p.wrongCount + 1 : p.wrongCount,
           };
@@ -351,12 +351,12 @@ export function useGameState() {
       const log = createLog(
         isCorrect ? 'correct' : 'wrong',
         isCorrect
-          ? `${player.name} answered correctly! (+${card.points} PTS)`
+          ? `${player.name} answered correctly! (+${card.points} PTS, -${card.cost} CR)`
           : `${player.name} answered incorrectly. (-${card.cost} CR)`,
         player.id,
         player.name,
         isCorrect ? card.points : 0,
-        isCorrect ? 0 : -card.cost
+        -card.cost
       );
 
       return {

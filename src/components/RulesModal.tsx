@@ -61,8 +61,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
                 <li>Every player starts with <strong>100 Credits</strong>.</li>
-                <li>Attempting a question risks credits equal to its point value (20, 30, 40, or 50 CR).</li>
-                <li>Credits are <strong>subtracted only if the player answers incorrectly</strong>. Correct answers keep all credits!</li>
+                <li>Attempting a question costs credits equal to its point value (20, 30, 40, or 50 CR).</li>
+                <li>Credits are <strong>subtracted for every attempt</strong>, irrespective of whether the answer is correct or incorrect.</li>
                 <li>A player who reaches <strong>10 or fewer Credits</strong> is done and will not receive further turns.</li>
                 <li>If all players reach <strong>10 or 0 Credits</strong>, the winner is determined by points earned. If points are tied, a Tie-Breaker is triggered!</li>
               </ul>
