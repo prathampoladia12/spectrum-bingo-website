@@ -211,6 +211,10 @@ export function App() {
         tiedPlayers={tiedPlayers}
         buzzedPlayerId={state.fffBuzzedPlayerId}
         attemptedPlayerIds={state.fffAttemptedPlayerIds}
+        fffScores={state.fffScores}
+        fffRound={state.fffRound}
+        fffMaxRounds={state.fffMaxRounds}
+        fffTargetWins={state.fffTargetWins}
         onBuzzIn={buzzInFFF}
         onSubmitAnswer={submitFFFAnswer}
         onSkipQuestion={skipToNextFFFQuestion}

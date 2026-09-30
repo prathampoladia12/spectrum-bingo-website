@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import type { Player } from '../types/game';
-import { Trophy, RotateCcw, Award } from 'lucide-react';
+import { Trophy, RotateCcw, Award, Zap } from 'lucide-react';
 import { fireLocalizedConfetti } from '../utils/confetti';
 
 interface GameOverModalProps {
@@ -28,10 +28,18 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
   if (!isOpen) return null;
 
+  const sortedPlayers = [...players].sort((a, b) => {
+    const fffDiff = (b.fffWins || 0) - (a.fffWins || 0);
+    if (fffDiff !== 0) return fffDiff;
+    const scoreDiff = b.score - a.score;
+    if (scoreDiff !== 0) return scoreDiff;
+    return b.credits - a.credits;
+  });
+
   const isTie = winnerId === null && tiedPlayerIds.length > 1;
   const tiedPlayers = players.filter(p => tiedPlayerIds.includes(p.id));
-  const winner = players.find(p => p.id === winnerId) || (tiedPlayers.length > 0 ? tiedPlayers[0] : players[0]);
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const winner = players.find(p => p.id === winnerId) || sortedPlayers[0];
+  const hasAnyFffWins = players.some(p => (p.fffWins || 0) > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-fade-in">
@@ -47,7 +55,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           </div>
 
           <div className="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase mb-1">
-            {isTie ? 'Tournament Match Tied!' : 'Tournament Champion'}
+            {winner.fffWins > 0 ? 'FFF Championship Winner' : isTie ? 'Tournament Match Tied!' : 'Tournament Champion'}
           </div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2">
             {isTie ? `Tie Between ${tiedPlayers.map(p => p.name).join(' & ')}!` : `${winner.name} Wins!`}
@@ -55,15 +63,18 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
             {isTie 
               ? `Both tied with ${tiedPlayers[0]?.score} Points at the end of the round!` 
-              : `Achieved ${winner.score} Points with ${winner.credits} Credits remaining!`
+              : winner.fffWins > 0
+                ? `Victorious with ${winner.fffWins} Fastest Finger First Win${winner.fffWins > 1 ? 's' : ''}, ${winner.score} Points, and ${winner.credits} Credits remaining!`
+                : `Achieved ${winner.score} Points with ${winner.credits} Credits remaining!`
             }
           </p>
         </div>
 
-        {/* Final Standings */}
+        {/* Final Standings Leaderboard */}
         <div className="p-6 space-y-3">
-          <div className="text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
-            Final Standings
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
+            <span>Tournament Leaderboard</span>
+            <span className="text-[10px] text-zinc-500 normal-case">Ranked by FFF Wins → Points → Credits</span>
           </div>
 
           <div className="space-y-2">
@@ -101,7 +112,19 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-right">
+                  <div className="flex items-center gap-3 sm:gap-4 text-right">
+                    {hasAnyFffWins && (
+                      player.fffWins > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">
+                          <Zap className="w-3 h-3 text-rose-400" />
+                          {player.fffWins} {player.fffWins === 1 ? 'FFF Win' : 'FFF Wins'}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-mono text-zinc-500 bg-zinc-800/40 border border-zinc-700/40">
+                          0 FFF
+                        </span>
+                      )
+                    )}
                     <div>
                       <div className="font-mono text-sm font-bold text-white">{player.score} PTS</div>
                       <div className="font-mono text-[11px] text-zinc-400">{player.credits} CR left</div>

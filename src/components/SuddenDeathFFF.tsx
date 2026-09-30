@@ -9,6 +9,10 @@ interface SuddenDeathFFFProps {
   tiedPlayers: Player[];
   buzzedPlayerId: number | null;
   attemptedPlayerIds?: number[];
+  fffScores?: Record<number, number>;
+  fffRound?: number;
+  fffMaxRounds?: number;
+  fffTargetWins?: number;
   onBuzzIn: (playerId: number) => void;
   onSubmitAnswer: (isCorrect: boolean) => void;
   onSkipQuestion?: () => void;
@@ -20,6 +24,10 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
   tiedPlayers,
   buzzedPlayerId,
   attemptedPlayerIds = [],
+  fffScores = {},
+  fffRound = 1,
+  fffMaxRounds = 5,
+  fffTargetWins = 3,
   onBuzzIn,
   onSubmitAnswer,
   onSkipQuestion,
@@ -81,6 +89,9 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
     onSubmitAnswer(isCorrect);
   };
 
+  const buzzedPlayerWins = buzzedPlayer ? ((fffScores[buzzedPlayer.id] ?? buzzedPlayer.fffWins ?? 0) + 1) : 1;
+  const isChampionshipPoint = buzzedPlayerWins >= fffTargetWins || fffRound >= fffMaxRounds;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg animate-fade-in">
       <div className="w-full max-w-2xl rounded-2xl bg-zinc-900 border-2 border-rose-500/60 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -92,13 +103,13 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
             </span>
             <div>
               <div className="text-sm font-black tracking-wider text-rose-400 uppercase flex items-center gap-2">
-                <span>Fastest Finger First (FFF)</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono">
-                  Sudden Death
+                <span>Fastest Finger First (FFF) Series</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-bold">
+                  Round {fffRound} of {fffMaxRounds}
                 </span>
               </div>
               <div className="text-[11px] font-mono text-zinc-400">
-                Unused question from board. Hit buzzer first, answer aloud. Correct answer wins instantly!
+                First to {fffTargetWins} Wins takes Championship • Otherwise most FFF wins • Hit buzzer first & answer
               </div>
             </div>
           </div>
@@ -109,6 +120,46 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
               <span>{countdown}s</span>
             </div>
           )}
+        </div>
+
+        {/* Live FFF Scoreboard Banner */}
+        <div className="px-6 py-2.5 bg-zinc-950/95 border-b border-zinc-800 flex items-center justify-between flex-wrap gap-2">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+            Series Scoreboard:
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
+            {tiedPlayers.map(p => {
+              const wins = fffScores[p.id] ?? p.fffWins ?? 0;
+              return (
+                <div key={p.id} className="flex items-center gap-2">
+                  <div
+                    style={{ backgroundColor: `${p.color.hex}22`, borderColor: `${p.color.hex}88` }}
+                    className="w-5 h-5 rounded-md border flex items-center justify-center font-mono font-bold text-[10px]"
+                  >
+                    <span style={{ color: p.color.hex }}>{p.avatar}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-200">{p.name}:</span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: fffTargetWins }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
+                          i < wins
+                            ? 'bg-rose-500 text-white font-bold shadow-sm shadow-rose-500/50'
+                            : 'bg-zinc-800 text-zinc-600 border border-zinc-700/60'
+                        }`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span className="text-[11px] font-mono text-rose-400 font-bold ml-1">
+                      ({wins}/{fffTargetWins})
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Buzzer Console (if no one buzzed in yet) */}
@@ -253,7 +304,7 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
                         className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
                       >
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Correct (Wins Tournament!)</span>
+                        <span>Correct ({isChampionshipPoint ? 'Takes Championship!' : `Award Round Win (${buzzedPlayerWins}/${fffTargetWins})`})</span>
                       </button>
                     </div>
                   </div>

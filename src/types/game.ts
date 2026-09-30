@@ -37,6 +37,7 @@ export interface Player {
   correctCount: number;
   wrongCount: number;
   totalSpent: number;
+  fffWins: number;
 }
 
 export type GamePhase = 
@@ -72,5 +73,9 @@ export interface GameState {
   fffTimer: number | null;
   fffAttemptedPlayerIds?: number[];
   fffUsedCardIds?: string[];
+  fffScores: Record<number, number>;
+  fffRound: number;
+  fffMaxRounds: number;
+  fffTargetWins: number;
   history: LogEntry[];
 }

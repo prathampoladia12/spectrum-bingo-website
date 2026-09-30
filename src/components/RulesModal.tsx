@@ -86,16 +86,21 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
             <div className="flex items-center gap-2 text-zinc-100 font-semibold text-xs uppercase tracking-wider font-mono">
               <Zap className="w-4 h-4 text-rose-400" />
-              <span>Tie-Breaker: Fastest Finger First (FFF) Sudden Death</span>
+              <span>Tie-Breaker: Fastest Finger First (FFF) Multi-Round Series</span>
             </div>
             <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
               <p>
-                When 2 or more contestants reach 100+ points in the same round (or tie on points when all credits run out), the match immediately enters <strong>Fastest Finger First (FFF) Sudden Death</strong>.
+                When 2 or more contestants reach 100+ points in the same round (or tie on points when all credits run out), the match enters a high-stakes <strong>Fastest Finger First (FFF) Series</strong>:
               </p>
+              <ul className="list-disc list-inside space-y-1.5 text-zinc-300">
+                <li><strong>First to 3 Wins:</strong> The first contestant to win 3 FFF rounds is immediately crowned Champion.</li>
+                <li><strong>Most FFF Wins:</strong> If neither player reaches 3 wins within 5 rounds, the contestant with the most FFF wins takes the championship.</li>
+                <li><strong>Tournament Leaderboard:</strong> Final standings are ranked primarily by <strong>FFF Wins</strong>, followed by game <strong>Points</strong>, followed by remaining <strong>Credits</strong>.</li>
+              </ul>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
                 <Zap className="w-4 h-4 shrink-0 mt-0.5" />
                 <p>
-                  <strong>Unused Grid Questions:</strong> Questions for Fastest Finger First are drawn directly from the unused questions remaining on the board! The first tied player to strike their buzzer button (or press their number key) gets 10 seconds to answer. A correct answer wins the entire championship instantly! If missed, the remaining tied players get to buzz in, or the next unused question is drawn if all miss.
+                  <strong>Unused Grid Questions:</strong> Questions for Fastest Finger First are drawn directly from unused questions on the board! Strike your buzzer first and state your answer within 10 seconds.
                 </p>
               </div>
             </div>

@@ -9,7 +9,7 @@ import type {
 import { INITIAL_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v6';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v7';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -30,6 +30,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
   {
     id: 2,
@@ -48,6 +49,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
   {
     id: 3,
@@ -66,6 +68,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
   {
     id: 4,
@@ -84,6 +87,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
   {
     id: 5,
@@ -102,6 +106,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
   {
     id: 6,
@@ -120,6 +125,7 @@ const DEFAULT_PLAYERS: Player[] = [
     correctCount: 0,
     wrongCount: 0,
     totalSpent: 0,
+    fffWins: 0,
   },
 ];
 
@@ -178,6 +184,10 @@ function getInitialState(): GameState {
     fffTimer: null,
     fffAttemptedPlayerIds: [],
     fffUsedCardIds: [],
+    fffScores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+    fffRound: 1,
+    fffMaxRounds: 5,
+    fffTargetWins: 3,
     history: [
       {
         id: 'init',
@@ -448,9 +458,11 @@ export function useGameState() {
             sounds.playBuzzer();
             const tiedIds = tiedTop.map(p => p.id);
             const unusedQ = getNextUnusedQuestion(prev.cards);
+            const initialFffScores: Record<number, number> = {};
+            prev.players.forEach(p => { initialFffScores[p.id] = 0; });
             const tieLog = createLog(
               'tie',
-              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Fastest Finger First Sudden Death with unused question (${unusedQ.category} • ${unusedQ.points} PTS)!`
+              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Fastest Finger First Series (First to 3 Wins)!`
             );
             return {
               ...prev,
@@ -461,6 +473,11 @@ export function useGameState() {
               fffBuzzedPlayerId: null,
               fffAttemptedPlayerIds: [],
               fffUsedCardIds: [unusedQ.id],
+              fffScores: initialFffScores,
+              fffRound: 1,
+              fffMaxRounds: 5,
+              fffTargetWins: 3,
+              players: prev.players.map(p => ({ ...p, fffWins: 0 })),
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -493,9 +510,11 @@ export function useGameState() {
             sounds.playBuzzer();
             const tiedIds = tiedTop.map(p => p.id);
             const unusedQ = getNextUnusedQuestion(prev.cards);
+            const initialFffScores: Record<number, number> = {};
+            prev.players.forEach(p => { initialFffScores[p.id] = 0; });
             const tieLog = createLog(
               'tie',
-              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death with unused question (${unusedQ.category} • ${unusedQ.points} PTS)!`
+              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Fastest Finger First Series (First to 3 Wins)!`
             );
             return {
               ...prev,
@@ -506,6 +525,11 @@ export function useGameState() {
               fffBuzzedPlayerId: null,
               fffAttemptedPlayerIds: [],
               fffUsedCardIds: [unusedQ.id],
+              fffScores: initialFffScores,
+              fffRound: 1,
+              fffMaxRounds: 5,
+              fffTargetWins: 3,
+              players: prev.players.map(p => ({ ...p, fffWins: 0 })),
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -536,9 +560,11 @@ export function useGameState() {
           if (tied.length > 1) {
             const tiedIds = tied.map(p => p.id);
             const unusedQ = getNextUnusedQuestion(prev.cards);
+            const initialFffScores: Record<number, number> = {};
+            prev.players.forEach(p => { initialFffScores[p.id] = 0; });
             const tieLog = createLog(
               'tie',
-              `⚔️ ALL SQUARES COMPLETED! Tie at ${topScore} PTS between ${tied.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death!`
+              `⚔️ ALL SQUARES COMPLETED! Tie at ${topScore} PTS between ${tied.map(p => p.name).join(' & ')}! Entering Fastest Finger First Series (First to 3 Wins)!`
             );
             return {
               ...prev,
@@ -549,6 +575,11 @@ export function useGameState() {
               fffBuzzedPlayerId: null,
               fffAttemptedPlayerIds: [],
               fffUsedCardIds: [unusedQ.id],
+              fffScores: initialFffScores,
+              fffRound: 1,
+              fffMaxRounds: 5,
+              fffTargetWins: 3,
+              players: prev.players.map(p => ({ ...p, fffWins: 0 })),
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -589,7 +620,7 @@ export function useGameState() {
     sounds.playBuzzer();
     setState(prev => {
       const player = prev.players.find(p => p.id === playerId);
-      const log = createLog('info', `🚨 ${player?.name} buzzed in first for Sudden Death!`, playerId, player?.name);
+      const log = createLog('info', `🚨 ${player?.name} buzzed in first for FFF Round ${prev.fffRound}!`, playerId, player?.name);
       return {
         ...prev,
         fffBuzzedPlayerId: playerId,
@@ -600,28 +631,106 @@ export function useGameState() {
 
   /**
    * Submit FFF Answer
+   * Rule: First to 3 FFF wins takes the championship.
+   * Else after max rounds (5) or question depletion, contestant with most FFF wins is winner.
    */
   const submitFFFAnswer = useCallback((isCorrect: boolean) => {
     if (!state.fffBuzzedPlayerId) return;
-    const buzzedPlayer = state.players.find(p => p.id === state.fffBuzzedPlayerId);
+    const buzzedPlayerId = state.fffBuzzedPlayerId;
 
     if (isCorrect) {
       sounds.playVictory();
       setState(prev => {
-        const log = createLog('win', `👑 ${buzzedPlayer?.name} answered Sudden Death correctly and WON!`, buzzedPlayer?.id, buzzedPlayer?.name);
+        const buzzedPlayer = prev.players.find(p => p.id === buzzedPlayerId);
+        const currentWins = (prev.fffScores[buzzedPlayerId] || 0) + 1;
+        const targetWins = prev.fffTargetWins || 3;
+        const newFffScores = {
+          ...prev.fffScores,
+          [buzzedPlayerId]: currentWins,
+        };
+        const updatedPlayers = prev.players.map(p => 
+          p.id === buzzedPlayerId ? { ...p, fffWins: currentWins } : p
+        );
+
+        // 1. Check if contestant reached 3 FFF wins -> Immediate Victory!
+        if (currentWins >= targetWins) {
+          const winLog = createLog(
+            'win',
+            `👑 ${buzzedPlayer?.name} won FFF Round ${prev.fffRound} (${currentWins}/${targetWins} Wins) and claims the Championship!`,
+            buzzedPlayer?.id,
+            buzzedPlayer?.name
+          );
+          return {
+            ...prev,
+            phase: 'GAME_OVER',
+            winnerId: buzzedPlayerId,
+            fffScores: newFffScores,
+            players: updatedPlayers,
+            history: [winLog, ...prev.history],
+          };
+        }
+
+        // 2. Check if max rounds reached
+        const nextRound = prev.fffRound + 1;
+        const usedIds = [...(prev.fffUsedCardIds || []), prev.fffQuestion?.id].filter(Boolean) as string[];
+
+        if (nextRound > (prev.fffMaxRounds || 5)) {
+          // Determine winner by most FFF wins, broken by points, then credits
+          const tiedPlayersList = updatedPlayers.filter(p => prev.tiedPlayerIds.includes(p.id));
+          const sortedByFff = [...tiedPlayersList].sort((a, b) => {
+            const fffDiff = (newFffScores[b.id] || 0) - (newFffScores[a.id] || 0);
+            if (fffDiff !== 0) return fffDiff;
+            const scoreDiff = b.score - a.score;
+            if (scoreDiff !== 0) return scoreDiff;
+            return b.credits - a.credits;
+          });
+          const seriesWinner = sortedByFff[0];
+
+          const finishLog = createLog(
+            'win',
+            `🏁 FFF Series concluded after ${prev.fffMaxRounds} rounds! ${seriesWinner.name} wins by most FFF wins (${newFffScores[seriesWinner.id] || 0} wins)!`,
+            seriesWinner.id,
+            seriesWinner.name
+          );
+
+          return {
+            ...prev,
+            phase: 'GAME_OVER',
+            winnerId: seriesWinner.id,
+            fffScores: newFffScores,
+            players: updatedPlayers,
+            history: [finishLog, ...prev.history],
+          };
+        }
+
+        // 3. Advance to next FFF round with next unused question
+        const nextQuestion = getNextUnusedQuestion(prev.cards, usedIds);
+        const roundLog = createLog(
+          'correct',
+          `⚡ ${buzzedPlayer?.name} won FFF Round ${prev.fffRound}! (${currentWins}/${targetWins} wins). Advancing to Round ${nextRound}!`,
+          buzzedPlayer?.id,
+          buzzedPlayer?.name
+        );
+
         return {
           ...prev,
-          phase: 'GAME_OVER',
-          winnerId: buzzedPlayer?.id || null,
-          history: [log, ...prev.history],
+          fffScores: newFffScores,
+          players: updatedPlayers,
+          fffRound: nextRound,
+          fffQuestion: nextQuestion,
+          fffBuzzedPlayerId: null,
+          fffAttemptedPlayerIds: [],
+          fffUsedCardIds: [...usedIds, nextQuestion.id],
+          history: [roundLog, ...prev.history],
         };
       });
     } else {
       sounds.playWrong();
       setState(prev => {
-        const attempted = [...(prev.fffAttemptedPlayerIds || []), prev.fffBuzzedPlayerId!];
+        const buzzedPlayer = prev.players.find(p => p.id === buzzedPlayerId);
+        const attempted = [...(prev.fffAttemptedPlayerIds || []), buzzedPlayerId];
         const unattempted = prev.tiedPlayerIds.filter(id => !attempted.includes(id));
-        const log = createLog('wrong', `${buzzedPlayer?.name} missed Sudden Death question!`, buzzedPlayer?.id, buzzedPlayer?.name);
+        const log = createLog('wrong', `${buzzedPlayer?.name} missed FFF Round ${prev.fffRound} question!`, buzzedPlayer?.id, buzzedPlayer?.name);
 
         if (unattempted.length > 0) {
           // Other tied contestant(s) can still buzz in for this question
@@ -634,15 +743,43 @@ export function useGameState() {
           };
         } else {
           // All tied contestants attempted and missed this question!
-          // Draw the NEXT unused question from the board
+          const nextRound = prev.fffRound + 1;
           const usedIds = [...(prev.fffUsedCardIds || []), prev.fffQuestion?.id].filter(Boolean) as string[];
+
+          if (nextRound > (prev.fffMaxRounds || 5)) {
+            const tiedPlayersList = prev.players.filter(p => prev.tiedPlayerIds.includes(p.id));
+            const sortedByFff = [...tiedPlayersList].sort((a, b) => {
+              const fffDiff = (prev.fffScores[b.id] || 0) - (prev.fffScores[a.id] || 0);
+              if (fffDiff !== 0) return fffDiff;
+              const scoreDiff = b.score - a.score;
+              if (scoreDiff !== 0) return scoreDiff;
+              return b.credits - a.credits;
+            });
+            const seriesWinner = sortedByFff[0];
+
+            const finishLog = createLog(
+              'win',
+              `🏁 FFF Series concluded after ${prev.fffMaxRounds} rounds! ${seriesWinner.name} wins by most FFF wins (${prev.fffScores[seriesWinner.id] || 0} wins)!`,
+              seriesWinner.id,
+              seriesWinner.name
+            );
+
+            return {
+              ...prev,
+              phase: 'GAME_OVER',
+              winnerId: seriesWinner.id,
+              history: [finishLog, log, ...prev.history],
+            };
+          }
+
           const nextQuestion = getNextUnusedQuestion(prev.cards, usedIds);
           const drawLog = createLog(
             'info', 
-            `All tied contestants missed! Drawing next unused question: ${nextQuestion.category} • ${nextQuestion.points} PTS.`
+            `All tied contestants missed Round ${prev.fffRound}! Advancing to Round ${nextRound}: ${nextQuestion.category} • ${nextQuestion.points} PTS.`
           );
           return {
             ...prev,
+            fffRound: nextRound,
             fffQuestion: nextQuestion,
             fffBuzzedPlayerId: null,
             fffAttemptedPlayerIds: [],
@@ -652,7 +789,7 @@ export function useGameState() {
         }
       });
     }
-  }, [state.fffBuzzedPlayerId, state.players]);
+  }, [state.fffBuzzedPlayerId]);
 
   /**
    * Draw the next unused question manually if contestants pass or skip

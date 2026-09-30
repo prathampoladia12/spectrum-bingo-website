@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import type { Player } from '../types/game';
-import { Coins, Trophy } from 'lucide-react';
+import { Coins, Trophy, Zap } from 'lucide-react';
 import { fireLocalizedConfetti } from '../utils/confetti';
 
 interface PlayerStatusProps {
@@ -76,6 +76,12 @@ export const PlayerStatus: React.FC<PlayerStatusProps> = ({
           <div>
             <div className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5">
               <span>{player.name}</span>
+              {player.fffWins > 0 && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-0.5">
+                  <Zap className="w-2.5 h-2.5 text-rose-400" />
+                  {player.fffWins}
+                </span>
+              )}
               {player.score >= 100 && (
                 <Trophy className="w-3.5 h-3.5 text-amber-400 inline" />
               )}
