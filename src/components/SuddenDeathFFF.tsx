@@ -105,10 +105,10 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
           <div className="p-6 bg-zinc-950/80 border-b border-zinc-800">
             <div className="text-center mb-4">
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
-                Hit Your Buzzer or Press Number Key (1-4)
+                Hit Your Buzzer or Press Number Key (1-{tiedPlayers.length})
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               {tiedPlayers.map((player) => (
                 <button
                   key={player.id}

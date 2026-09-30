@@ -9,7 +9,7 @@ import type {
 import { INITIAL_QUESTIONS, TIE_BREAKER_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v1';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v2';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -85,6 +85,42 @@ const DEFAULT_PLAYERS: Player[] = [
     wrongCount: 0,
     totalSpent: 0,
   },
+  {
+    id: 5,
+    name: 'Player 5',
+    credits: 100,
+    score: 0,
+    color: {
+      accent: 'cyan',
+      border: 'border-cyan-500/40',
+      bg: 'bg-cyan-500/10',
+      badge: 'bg-cyan-500 text-white',
+      ring: 'ring-cyan-500',
+      hex: '#06b6d4',
+    },
+    avatar: 'P5',
+    correctCount: 0,
+    wrongCount: 0,
+    totalSpent: 0,
+  },
+  {
+    id: 6,
+    name: 'Player 6',
+    credits: 100,
+    score: 0,
+    color: {
+      accent: 'rose',
+      border: 'border-rose-500/40',
+      bg: 'bg-rose-500/10',
+      badge: 'bg-rose-500 text-white',
+      ring: 'ring-rose-500',
+      hex: '#f43f5e',
+    },
+    avatar: 'P6',
+    correctCount: 0,
+    wrongCount: 0,
+    totalSpent: 0,
+  },
 ];
 
 function createInitialCards(): CardState[] {
@@ -105,7 +141,7 @@ function getInitialState(): GameState {
     winnerId: null,
     tiedPlayerIds: [],
     tieBreakerIndex: 0,
-    tieBreakerScores: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    tieBreakerScores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
     fffQuestion: null,
     fffBuzzedPlayerId: null,
     fffTimer: null,
@@ -114,7 +150,7 @@ function getInitialState(): GameState {
         id: 'init',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'info',
-        message: 'Tech Trivia Challenge started. 4 players ready with 100 credits each.',
+        message: 'Tech Trivia Challenge started. 6 players ready with 100 credits each.',
       },
     ],
   };
@@ -125,7 +161,10 @@ export function useGameState() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.players) && parsed.players.length === 6) {
+          return parsed;
+        }
       }
     } catch {
       // Fallback
@@ -334,10 +373,11 @@ export function useGameState() {
       // Find the next eligible player with > 10 credits
       let nextPlayerIndex = -1;
       let roundIncrement = 0;
+      const numPlayers = prev.players.length;
 
-      for (let i = 1; i <= 4; i++) {
-        const candidateIndex = (prev.currentPlayerIndex + i) % 4;
-        if ((prev.currentPlayerIndex + i) >= 4 && roundIncrement === 0) {
+      for (let i = 1; i <= numPlayers; i++) {
+        const candidateIndex = (prev.currentPlayerIndex + i) % numPlayers;
+        if ((prev.currentPlayerIndex + i) >= numPlayers && roundIncrement === 0) {
           roundIncrement = 1;
         }
         if (!isPlayerEliminated(prev.players[candidateIndex])) {

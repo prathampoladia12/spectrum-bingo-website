@@ -48,7 +48,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               <span>Core Objective & Win Condition</span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              4 players take turns selecting questions on an interactive 4×4 grid. Categories span Data Structures & Algorithms, Artificial Intelligence & Machine Learning, Web Systems & Dev, and Core Programming. The first player to reach <strong>100 Points</strong> wins the match.
+              6 players take turns selecting questions on an interactive 4×4 grid. Categories span Data Structures & Algorithms, Artificial Intelligence & Machine Learning, Web Systems & Dev, and Core Programming. The first player to reach <strong>100 Points</strong> wins the match.
             </p>
           </div>
 
@@ -74,7 +74,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 <span>Round-Based Format & Scoring</span>
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
-                <li>Gameplay is strictly <strong>round-based</strong>: in each round, every eligible player receives exactly one turn (Player 1 → Player 2 → Player 3 → Player 4).</li>
+                <li>Gameplay is strictly <strong>round-based</strong>: in each round, every eligible player receives exactly one turn (Player 1 → Player 2 → ... → Player 6).</li>
                 <li>Answering correctly awards the full points value (20, 30, 40, or 50 PTS). Answering incorrectly awards 0 points.</li>
                 <li>Win conditions and ties are evaluated <strong>at the completion of each round</strong>.</li>
                 <li>If 2 or more players reach <strong>100+ points in the same round</strong>, it is declared a tie and triggers the Championship Tie-Breaker phase!</li>

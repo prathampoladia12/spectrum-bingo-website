@@ -112,11 +112,11 @@ export function App() {
               Live Contestants Dashboard (Target: 100 PTS)
             </span>
             <span className="text-[11px] font-mono text-zinc-400 hidden sm:inline">
-              Turn sequence: P1 → P2 → P3 → P4
+              Turn sequence: {state.players.map(p => p.avatar).join(' → ')}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3">
             {state.players.map((player, idx) => (
               <PlayerStatus
                 key={player.id}
