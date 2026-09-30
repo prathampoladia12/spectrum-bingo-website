@@ -11,7 +11,9 @@ import {
   Eye, 
   Clock, 
   Sparkles,
-  AlertCircle 
+  AlertCircle,
+  Database,
+  Network
 } from 'lucide-react';
 import { sounds } from '../utils/audio';
 
@@ -111,6 +113,8 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
       case 'AI/ML': return <BrainCircuit className="w-4 h-4 text-purple-400" />;
       case 'WSD': return <Globe className="w-4 h-4 text-emerald-400" />;
       case 'PROGRAMMING': return <Terminal className="w-4 h-4 text-amber-400" />;
+      case 'DBMS': return <Database className="w-4 h-4 text-teal-400" />;
+      case 'NETWORKING': return <Network className="w-4 h-4 text-indigo-400" />;
     }
   };
 
@@ -155,7 +159,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
             )}
 
             <div className="text-[11px] font-mono bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-700/60 text-zinc-400">
-              Cost: <span className="text-amber-400 font-semibold">-{card.cost} CR</span>
+              Risk: <span className="text-amber-400 font-semibold">-{card.cost} CR if incorrect</span>
             </div>
           </div>
         </div>
@@ -233,7 +237,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                       className="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-md shadow-emerald-500/10"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>Correct (+{card.points} PTS, -{card.cost} CR) [C]</span>
+                      <span>Correct (+{card.points} PTS) [C]</span>
                     </button>
                   </div>
                 </div>
@@ -257,7 +261,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                 <div className="space-y-0.5">
                   <div className="font-semibold text-sm">
                     {evaluationResult 
-                      ? `Verified Correct! +${card.points} PTS awarded to ${activePlayer.name} (-${card.cost} CR).` 
+                      ? `Verified Correct! +${card.points} PTS awarded to ${activePlayer.name}. No credits deducted!` 
                       : `Verified Incorrect. -${card.cost} CR deducted from ${activePlayer.name}.`}
                   </div>
                   <div className="text-xs text-zinc-300">

@@ -9,7 +9,7 @@ import type {
 import { INITIAL_QUESTIONS, TIE_BREAKER_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v2';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v3';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -162,7 +162,13 @@ export function useGameState() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.players) && parsed.players.length === 6) {
+        if (
+          parsed && 
+          Array.isArray(parsed.players) && 
+          parsed.players.length === 6 && 
+          Array.isArray(parsed.cards) && 
+          parsed.cards.length === 24
+        ) {
           return parsed;
         }
       }
@@ -322,8 +328,8 @@ export function useGameState() {
           return {
             ...p,
             score: isCorrect ? p.score + card.points : p.score,
-            credits: Math.max(0, p.credits - card.cost),
-            totalSpent: p.totalSpent + card.cost,
+            credits: isCorrect ? p.credits : Math.max(0, p.credits - card.cost),
+            totalSpent: !isCorrect ? p.totalSpent + card.cost : p.totalSpent,
             correctCount: isCorrect ? p.correctCount + 1 : p.correctCount,
             wrongCount: !isCorrect ? p.wrongCount + 1 : p.wrongCount,
           };
@@ -345,12 +351,12 @@ export function useGameState() {
       const log = createLog(
         isCorrect ? 'correct' : 'wrong',
         isCorrect
-          ? `${player.name} answered correctly! (+${card.points} PTS, -${card.cost} CR)`
+          ? `${player.name} answered correctly! (+${card.points} PTS)`
           : `${player.name} answered incorrectly. (-${card.cost} CR)`,
         player.id,
         player.name,
         isCorrect ? card.points : 0,
-        -card.cost
+        isCorrect ? 0 : -card.cost
       );
 
       return {

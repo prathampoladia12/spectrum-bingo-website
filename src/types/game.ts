@@ -1,4 +1,4 @@
-export type Category = 'DSA' | 'AI/ML' | 'WSD' | 'PROGRAMMING';
+export type Category = 'DSA' | 'AI/ML' | 'WSD' | 'PROGRAMMING' | 'DBMS' | 'NETWORKING';
 
 export interface QuestionItem {
   id: string;

@@ -5,6 +5,8 @@ import {
   BrainCircuit, 
   Globe, 
   Terminal, 
+  Database,
+  Network,
   Lock, 
   CheckCircle2, 
   XCircle, 
@@ -48,6 +50,18 @@ const CATEGORY_CONFIG: Record<Category, {
     accentColor: 'text-amber-400',
     badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   },
+  'DBMS': {
+    icon: Database,
+    subcode: 'SYS_05 // DATA',
+    accentColor: 'text-teal-400',
+    badgeBg: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+  },
+  'NETWORKING': {
+    icon: Network,
+    subcode: 'SYS_06 // NET',
+    accentColor: 'text-indigo-400',
+    badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  },
 };
 
 export const GameCard: React.FC<GameCardProps> = ({
@@ -76,7 +90,7 @@ export const GameCard: React.FC<GameCardProps> = ({
     <div
       onClick={handleClick}
       className={`
-        relative group h-44 sm:h-48 md:h-52 rounded-xl p-4 flex flex-col justify-between 
+        relative group h-40 sm:h-44 md:h-48 rounded-xl p-3 sm:p-4 flex flex-col justify-between 
         transition-all duration-300 select-none overflow-hidden
         border backdrop-blur-md
         ${isMasked 
@@ -118,7 +132,7 @@ export const GameCard: React.FC<GameCardProps> = ({
       <div className="my-auto text-center z-10">
         {isMasked ? (
           <div>
-            <div className="text-4xl sm:text-5xl font-black tracking-tight text-white group-hover:scale-105 transition-transform duration-200">
+            <div className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white group-hover:scale-105 transition-transform duration-200">
               {card.points}
             </div>
             <div className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase mt-0.5">

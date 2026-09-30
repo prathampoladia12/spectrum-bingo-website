@@ -163,6 +163,86 @@ export const INITIAL_QUESTIONS: QuestionItem[] = [
     answer: 'The sending goroutine blocks until a receiver is ready',
     explanation: 'Unbuffered channels in Go provide synchronous communication. A send operation blocks until another goroutine executes a corresponding receive on that channel.',
   },
+
+  // ==========================================
+  // DBMS (Database Management Systems)
+  // ==========================================
+  {
+    id: 'dbms_20',
+    category: 'DBMS',
+    points: 20,
+    cost: 20,
+    question_text: 'What is a DBMS?',
+    answer: 'Software used to create, manage, and retrieve data efficiently (e.g., MySQL, Oracle).',
+    explanation: 'A Database Management System (DBMS) is system software for creating and managing databases, providing users and applications with a systematic way to create, retrieve, update, and manage data.',
+  },
+  {
+    id: 'dbms_30',
+    category: 'DBMS',
+    points: 30,
+    cost: 30,
+    question_text: 'What is the difference between a Primary Key and a Unique Key?',
+    answer: 'Primary Key allows no NULLs and only one per table; Unique Key allows NULLs and can be multiple per table.',
+    explanation: 'A Primary Key uniquely identifies each row and does not accept NULL values. A Unique Key uniquely identifies each row but can accept NULL values (depending on DB engine), and a table can have multiple unique constraints.',
+  },
+  {
+    id: 'dbms_40',
+    category: 'DBMS',
+    points: 40,
+    cost: 40,
+    question_text: 'What are the ACID properties in database transactions?',
+    answer: 'A: Atomicity (All or nothing), C: Consistency (Preserves rules/constraints), I: Isolation (Transactions do not interfere), D: Durability (Committed data is permanently saved).',
+    explanation: 'Atomicity ensures that all operations in a transaction succeed or fail together. Consistency ensures database constraints are preserved. Isolation ensures concurrent transactions execute independently. Durability guarantees committed changes survive system failures.',
+  },
+  {
+    id: 'dbms_50',
+    category: 'DBMS',
+    points: 50,
+    cost: 50,
+    question_text: 'What is the key difference between Second Normal Form (2NF) and Third Normal Form (3NF)?',
+    answer: '2NF eliminates partial dependency; 3NF eliminates transitive dependency.',
+    explanation: '2NF requires 1NF and that all non-key attributes are fully functionally dependent on the entire primary key (no partial dependency). 3NF requires 2NF and that no non-key attribute depends transitively on the primary key.',
+  },
+
+  // ==========================================
+  // NETWORKING (Protocols & Architecture)
+  // ==========================================
+  {
+    id: 'net_20',
+    category: 'NETWORKING',
+    points: 20,
+    cost: 20,
+    question_text: 'What is the difference between Bandwidth and Latency?',
+    answer: 'Bandwidth is the maximum data transfer capacity of a link; Latency is the time delay for data to travel from source to destination.',
+    explanation: 'Bandwidth measures throughput capacity (e.g., Gbps), whereas Latency measures propagation and transmission delay (e.g., milliseconds).',
+  },
+  {
+    id: 'net_30',
+    category: 'NETWORKING',
+    points: 30,
+    cost: 30,
+    question_text: 'What is DNS, and which standard port does it use?',
+    answer: 'Domain Name System translates human-readable domain names (e.g., google.com) into IP addresses; it primarily uses Port 53 (UDP/TCP).',
+    explanation: 'The Domain Name System (DNS) resolves human-friendly hostnames to machine IP addresses, predominantly utilizing UDP port 53 for queries and TCP port 53 for zone transfers or responses exceeding 512 bytes.',
+  },
+  {
+    id: 'net_40',
+    category: 'NETWORKING',
+    points: 40,
+    cost: 40,
+    question_text: 'What is ARP, and how does it work?',
+    answer: 'Address Resolution Protocol resolves a known IPv4 address to its corresponding physical MAC address on a local network via broadcast/unicast.',
+    explanation: 'ARP broadcasts a request ("Who has IP X.X.X.X? Tell MAC Y") to all hosts on the local network segment. The host with that IP replies with a unicast packet containing its MAC address.',
+  },
+  {
+    id: 'net_50',
+    category: 'NETWORKING',
+    points: 50,
+    cost: 50,
+    question_text: 'What is the difference between Flow Control and Congestion Control?',
+    answer: 'Flow Control prevents a fast sender from overwhelming a slow receiver (end-to-end); Congestion Control prevents network links and routers from getting overloaded (network-wide).',
+    explanation: 'Flow Control is an end-to-end mechanism managed by receiver window size (rwnd). Congestion Control is a network-wide mechanism managed by congestion window size (cwnd) to prevent packet collapse at intermediate routers.',
+  },
 ];
 
 // Tie-breaker questions for when multiple players reach 100+ points simultaneously

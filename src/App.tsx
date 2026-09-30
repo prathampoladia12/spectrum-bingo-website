@@ -14,6 +14,8 @@ import {
   BrainCircuit, 
   Globe, 
   Terminal, 
+  Database,
+  Network,
   AlertCircle,
   HelpCircle
 } from 'lucide-react';
@@ -24,6 +26,8 @@ const CATEGORIES: { id: Category; label: string; sub: string; icon: React.Compon
   { id: 'AI/ML', label: 'AI / ML', sub: 'NEURAL & LEARNING', icon: BrainCircuit },
   { id: 'WSD', label: 'WSD', sub: 'WEB SYSTEMS & PROTOCOLS', icon: Globe },
   { id: 'PROGRAMMING', label: 'PROGRAMMING', sub: 'LANGUAGES & RUNTIMES', icon: Terminal },
+  { id: 'DBMS', label: 'DBMS', sub: 'DATABASE SYSTEMS', icon: Database },
+  { id: 'NETWORKING', label: 'NETWORKING', sub: 'PROTOCOLS & ARCHITECTURE', icon: Network },
 ];
 
 const POINT_ROWS = [20, 30, 40, 50];
@@ -129,10 +133,10 @@ export function App() {
           </div>
         </section>
 
-        {/* 4x4 Tech Trivia Interactive Grid */}
+        {/* 6x4 Tech Trivia Interactive Grid */}
         <section className="flex-1 flex flex-col justify-center my-2" aria-label="Trivia Grid">
           {/* Category Column Headers */}
-          <div className="grid grid-cols-4 gap-3 sm:gap-4 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 mb-3">
             {CATEGORIES.map(cat => {
               const Icon = cat.icon;
               return (
@@ -147,7 +151,7 @@ export function App() {
                     <div className="font-mono font-bold text-xs sm:text-sm tracking-wide text-zinc-200">
                       {cat.label}
                     </div>
-                    <div className="text-[9px] font-mono text-zinc-400 hidden md:block">
+                    <div className="text-[9px] font-mono text-zinc-400 hidden xl:block">
                       {cat.sub}
                     </div>
                   </div>
@@ -156,8 +160,8 @@ export function App() {
             })}
           </div>
 
-          {/* 4x4 Grid Matrix */}
-          <div className="grid grid-cols-4 gap-3 sm:gap-4">
+          {/* 6x4 Grid Matrix */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
             {orderedCards.map(card => (
               <GameCard
                 key={card.id}
@@ -178,7 +182,7 @@ export function App() {
               <span>Reactive Board Sync: Active</span>
             </span>
             <span>•</span>
-            <span>Credits: Deducted on every attempt • ≤ 10 CR done</span>
+            <span>Credits: Deducted on incorrect attempt • ≤ 10 CR done</span>
           </div>
 
           <div className="flex items-center gap-3">

@@ -26,7 +26,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 Tech Trivia Challenge Rules
               </h3>
               <div className="text-[11px] font-mono text-zinc-400">
-                Official 4×4 Jeopardy-Bingo Hybrid Rules & Economy
+                Official 6×4 Jeopardy-Bingo Hybrid Rules & Economy
               </div>
             </div>
           </div>
@@ -48,7 +48,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               <span>Core Objective & Win Condition</span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              6 players take turns selecting questions on an interactive 4×4 grid. Categories span Data Structures & Algorithms, Artificial Intelligence & Machine Learning, Web Systems & Dev, and Core Programming. The first player to reach <strong>100 Points</strong> wins the match.
+              6 players take turns selecting questions on an interactive 6×4 grid. Categories span DSA, AI/ML, WSD, Programming, DBMS, and Networking. The first player to reach <strong>100 Points</strong> wins the match.
             </p>
           </div>
 
@@ -61,8 +61,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               </div>
               <ul className="text-xs text-zinc-400 space-y-1.5 list-disc list-inside">
                 <li>Every player starts with <strong>100 Credits</strong>.</li>
-                <li>Attempting a question costs credits equal to its point value (20, 30, 40, or 50 CR).</li>
-                <li>Credits are <strong>subtracted for every attempt</strong> regardless of result.</li>
+                <li>Attempting a question risks credits equal to its point value (20, 30, 40, or 50 CR).</li>
+                <li>Credits are <strong>subtracted only if the player answers incorrectly</strong>. Correct answers keep all credits!</li>
                 <li>A player who reaches <strong>10 or fewer Credits</strong> is done and will not receive further turns.</li>
                 <li>If all players reach <strong>10 or 0 Credits</strong>, the winner is determined by points earned. If points are tied, a Tie-Breaker is triggered!</li>
               </ul>
