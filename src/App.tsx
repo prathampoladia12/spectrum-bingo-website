@@ -40,6 +40,7 @@ export function App() {
     closeQuestionModal,
     buzzInFFF,
     submitFFFAnswer,
+    skipToNextFFFQuestion,
     resetGame,
     setCurrentPlayer,
     activeCard,
@@ -209,8 +210,10 @@ export function App() {
         question={state.fffQuestion}
         tiedPlayers={tiedPlayers}
         buzzedPlayerId={state.fffBuzzedPlayerId}
+        attemptedPlayerIds={state.fffAttemptedPlayerIds}
         onBuzzIn={buzzInFFF}
         onSubmitAnswer={submitFFFAnswer}
+        onSkipQuestion={skipToNextFFFQuestion}
       />
 
       {/* Game Over Victory Modal */}

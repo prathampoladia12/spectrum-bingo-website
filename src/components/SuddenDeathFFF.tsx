@@ -8,8 +8,10 @@ interface SuddenDeathFFFProps {
   question: QuestionItem | null;
   tiedPlayers: Player[];
   buzzedPlayerId: number | null;
+  attemptedPlayerIds?: number[];
   onBuzzIn: (playerId: number) => void;
   onSubmitAnswer: (isCorrect: boolean) => void;
+  onSkipQuestion?: () => void;
 }
 
 export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
@@ -17,14 +19,23 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
   question,
   tiedPlayers,
   buzzedPlayerId,
+  attemptedPlayerIds = [],
   onBuzzIn,
   onSubmitAnswer,
+  onSkipQuestion,
 }) => {
   const [countdown, setCountdown] = useState<number>(10);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState<boolean>(false);
   const [hasEvaluated, setHasEvaluated] = useState<boolean>(false);
 
   const buzzedPlayer = tiedPlayers.find(p => p.id === buzzedPlayerId) || null;
+
+  // Reset state whenever a new question is drawn
+  useEffect(() => {
+    setIsAnswerRevealed(false);
+    setHasEvaluated(false);
+    setCountdown(10);
+  }, [question?.id]);
 
   // Countdown timer once someone buzzes in
   useEffect(() => {
@@ -45,14 +56,14 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
     return () => clearInterval(timer);
   }, [buzzedPlayerId, hasEvaluated]);
 
-  // Keyboard shortcut listener: Keys 1..4 to buzz in
+  // Keyboard shortcut listener: Keys 1..6 to buzz in (only unattempted contestants)
   useEffect(() => {
     if (!isOpen || buzzedPlayerId) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key;
       tiedPlayers.forEach((p) => {
-        if (key === String(p.id)) {
+        if (key === String(p.id) && !attemptedPlayerIds.includes(p.id)) {
           onBuzzIn(p.id);
         }
       });
@@ -60,7 +71,7 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, buzzedPlayerId, tiedPlayers, onBuzzIn]);
+  }, [isOpen, buzzedPlayerId, tiedPlayers, attemptedPlayerIds, onBuzzIn]);
 
   if (!isOpen || !question) return null;
 
@@ -87,7 +98,7 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
                 </span>
               </div>
               <div className="text-[11px] font-mono text-zinc-400">
-                Hit buzzer first, answer aloud. Correct answer wins instantly!
+                Unused question from board. Hit buzzer first, answer aloud. Correct answer wins instantly!
               </div>
             </div>
           </div>
@@ -109,26 +120,34 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              {tiedPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  onClick={() => onBuzzIn(player.id)}
-                  className="p-5 rounded-2xl border-2 transition-all duration-150 flex flex-col items-center justify-center gap-2 group cursor-pointer hover:scale-105 active:scale-95 shadow-lg bg-zinc-900 border-zinc-700 hover:border-rose-500 hover:bg-rose-500/10"
-                >
-                  <div
-                    style={{ backgroundColor: `${player.color.hex}22`, borderColor: `${player.color.hex}88` }}
-                    className="w-10 h-10 rounded-full border flex items-center justify-center font-mono font-bold text-sm"
+              {tiedPlayers.map((player) => {
+                const isLockedOut = attemptedPlayerIds.includes(player.id);
+                return (
+                  <button
+                    key={player.id}
+                    disabled={isLockedOut}
+                    onClick={() => !isLockedOut && onBuzzIn(player.id)}
+                    className={`p-5 rounded-2xl border-2 transition-all duration-150 flex flex-col items-center justify-center gap-2 group shadow-lg ${
+                      isLockedOut
+                        ? 'opacity-35 cursor-not-allowed bg-zinc-950 border-zinc-800/80'
+                        : 'bg-zinc-900 border-zinc-700 hover:border-rose-500 hover:bg-rose-500/10 cursor-pointer hover:scale-105 active:scale-95'
+                    }`}
                   >
-                    <span style={{ color: player.color.hex }}>{player.avatar}</span>
-                  </div>
-                  <div className="text-sm font-bold text-white group-hover:text-rose-300">
-                    {player.name}
-                  </div>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                    [Key: {player.id}] BUZZ IN
-                  </span>
-                </button>
-              ))}
+                    <div
+                      style={{ backgroundColor: `${player.color.hex}22`, borderColor: `${player.color.hex}88` }}
+                      className="w-10 h-10 rounded-full border flex items-center justify-center font-mono font-bold text-sm"
+                    >
+                      <span style={{ color: player.color.hex }}>{player.avatar}</span>
+                    </div>
+                    <div className="text-sm font-bold text-white group-hover:text-rose-300">
+                      {player.name}
+                    </div>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      {isLockedOut ? 'MISSED QUESTION' : `[Key: ${player.id}] BUZZ IN`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -154,9 +173,37 @@ export const SuddenDeathFFF: React.FC<SuddenDeathFFFProps> = ({
 
         {/* Question Display */}
         <div className="p-6 overflow-y-auto space-y-5">
+          {/* Unused Question Category & Skip Option */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-rose-300 uppercase">
+                {question.category}
+              </span>
+              <span className="text-xs font-mono font-bold text-zinc-400">
+                • {question.points} PTS (Unused Grid Question)
+              </span>
+            </div>
+
+            {onSkipQuestion && !buzzedPlayer && (
+              <button
+                onClick={onSkipQuestion}
+                className="text-xs font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded border border-zinc-700"
+              >
+                <span>Draw Next Unused Question →</span>
+              </button>
+            )}
+          </div>
+
           <h3 className="text-lg font-medium text-white leading-relaxed">
             {question.question_text}
           </h3>
+
+          {/* Code Snippet (if available) */}
+          {question.codeSnippet && (
+            <div className="rounded-xl bg-zinc-950 p-4 border border-zinc-800 font-mono text-xs sm:text-sm text-emerald-400 overflow-x-auto whitespace-pre">
+              {question.codeSnippet}
+            </div>
+          )}
 
           {/* Reveal & Verification (NO MCQ) */}
           {buzzedPlayer && (

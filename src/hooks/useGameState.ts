@@ -9,7 +9,7 @@ import type {
 import { INITIAL_QUESTIONS, FFF_QUESTIONS } from '../data/questions';
 import { sounds } from '../utils/audio';
 
-const STORAGE_KEY = 'spectrum_tech_trivia_state_v5';
+const STORAGE_KEY = 'spectrum_tech_trivia_state_v6';
 const SYNC_CHANNEL_NAME = 'spectrum_tech_trivia_channel';
 
 const DEFAULT_PLAYERS: Player[] = [
@@ -130,6 +130,37 @@ function createInitialCards(): CardState[] {
   }));
 }
 
+/**
+ * Pick an unused question from the grid for Fastest Finger First.
+ * Prioritizes masked (unrevealed) cards on the board.
+ */
+function getNextUnusedQuestion(
+  cards: CardState[], 
+  usedCardIds: string[] = []
+) {
+  // 1. Unused masked cards on the board
+  const availableMasked = cards.filter(
+    c => c.status === 'masked' && !usedCardIds.includes(c.id)
+  );
+  if (availableMasked.length > 0) {
+    // Pick from highest available point tier among unused cards
+    const maxPoints = Math.max(...availableMasked.map(c => c.points));
+    const topTier = availableMasked.filter(c => c.points === maxPoints);
+    return topTier[Math.floor(Math.random() * topTier.length)];
+  }
+
+  // 2. Any card not answered correctly that wasn't used yet in FFF
+  const availableAny = cards.filter(
+    c => c.status !== 'answered_correct' && !usedCardIds.includes(c.id)
+  );
+  if (availableAny.length > 0) {
+    return availableAny[Math.floor(Math.random() * availableAny.length)];
+  }
+
+  // 3. Fallback to reserve question
+  return FFF_QUESTIONS[0];
+}
+
 function getInitialState(): GameState {
   return {
     players: DEFAULT_PLAYERS,
@@ -145,6 +176,8 @@ function getInitialState(): GameState {
     fffQuestion: null,
     fffBuzzedPlayerId: null,
     fffTimer: null,
+    fffAttemptedPlayerIds: [],
+    fffUsedCardIds: [],
     history: [
       {
         id: 'init',
@@ -414,17 +447,20 @@ export function useGameState() {
             // Tie! Multiple players reached the top 100+ score in the same round
             sounds.playBuzzer();
             const tiedIds = tiedTop.map(p => p.id);
+            const unusedQ = getNextUnusedQuestion(prev.cards);
             const tieLog = createLog(
               'tie',
-              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Fastest Finger First Sudden Death!`
+              `⚔️ TIE IN ROUND ${prev.currentRound}! ${tiedTop.map(p => p.name).join(' & ')} scored ${topScore} PTS! Entering Fastest Finger First Sudden Death with unused question (${unusedQ.category} • ${unusedQ.points} PTS)!`
             );
             return {
               ...prev,
               activeCardId: null,
               phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              fffQuestion: FFF_QUESTIONS[0],
+              fffQuestion: unusedQ,
               fffBuzzedPlayerId: null,
+              fffAttemptedPlayerIds: [],
+              fffUsedCardIds: [unusedQ.id],
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -456,17 +492,20 @@ export function useGameState() {
           if (tiedTop.length > 1) {
             sounds.playBuzzer();
             const tiedIds = tiedTop.map(p => p.id);
+            const unusedQ = getNextUnusedQuestion(prev.cards);
             const tieLog = createLog(
               'tie',
-              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death!`
+              `⚔️ ALL PLAYERS ELIMINATED (≤ 10 CR)! Tie at ${topScore} PTS between ${tiedTop.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death with unused question (${unusedQ.category} • ${unusedQ.points} PTS)!`
             );
             return {
               ...prev,
               activeCardId: null,
               phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              fffQuestion: FFF_QUESTIONS[0],
+              fffQuestion: unusedQ,
               fffBuzzedPlayerId: null,
+              fffAttemptedPlayerIds: [],
+              fffUsedCardIds: [unusedQ.id],
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -496,6 +535,7 @@ export function useGameState() {
           const tied = sorted.filter(p => p.score === topScore);
           if (tied.length > 1) {
             const tiedIds = tied.map(p => p.id);
+            const unusedQ = getNextUnusedQuestion(prev.cards);
             const tieLog = createLog(
               'tie',
               `⚔️ ALL SQUARES COMPLETED! Tie at ${topScore} PTS between ${tied.map(p => p.name).join(' & ')}! Entering Fastest Finger First Sudden Death!`
@@ -505,8 +545,10 @@ export function useGameState() {
               activeCardId: null,
               phase: 'SUDDEN_DEATH_FFF',
               tiedPlayerIds: tiedIds,
-              fffQuestion: FFF_QUESTIONS[0],
+              fffQuestion: unusedQ,
               fffBuzzedPlayerId: null,
+              fffAttemptedPlayerIds: [],
+              fffUsedCardIds: [unusedQ.id],
               history: [tieLog, ...prev.history],
             };
           } else {
@@ -542,6 +584,7 @@ export function useGameState() {
   const buzzInFFF = useCallback((playerId: number) => {
     if (state.phase !== 'SUDDEN_DEATH_FFF' || state.fffBuzzedPlayerId !== null) return;
     if (!state.tiedPlayerIds.includes(playerId)) return;
+    if (state.fffAttemptedPlayerIds?.includes(playerId)) return;
 
     sounds.playBuzzer();
     setState(prev => {
@@ -553,7 +596,7 @@ export function useGameState() {
         history: [log, ...prev.history],
       };
     });
-  }, [state.phase, state.fffBuzzedPlayerId, state.tiedPlayerIds]);
+  }, [state.phase, state.fffBuzzedPlayerId, state.tiedPlayerIds, state.fffAttemptedPlayerIds]);
 
   /**
    * Submit FFF Answer
@@ -576,33 +619,63 @@ export function useGameState() {
     } else {
       sounds.playWrong();
       setState(prev => {
-        // Unlock buzzer for other tied players
-        const remainingTied = prev.tiedPlayerIds.filter(id => id !== prev.fffBuzzedPlayerId);
-        const log = createLog('wrong', `${buzzedPlayer?.name} missed Sudden Death question! Buzzer unlocked.`, buzzedPlayer?.id, buzzedPlayer?.name);
+        const attempted = [...(prev.fffAttemptedPlayerIds || []), prev.fffBuzzedPlayerId!];
+        const unattempted = prev.tiedPlayerIds.filter(id => !attempted.includes(id));
+        const log = createLog('wrong', `${buzzedPlayer?.name} missed Sudden Death question!`, buzzedPlayer?.id, buzzedPlayer?.name);
 
-        if (remainingTied.length === 1) {
-          // Default winner if only one player remaining
-          const soleWinner = prev.players.find(p => p.id === remainingTied[0]);
+        if (unattempted.length > 0) {
+          // Other tied contestant(s) can still buzz in for this question
+          const unlockLog = createLog('info', `Buzzer re-opened for remaining tied contestants.`);
           return {
             ...prev,
-            phase: 'GAME_OVER',
-            winnerId: soleWinner?.id || null,
-            history: [
-              createLog('win', `👑 ${soleWinner?.name} wins as sole remaining contestant!`, soleWinner?.id, soleWinner?.name),
-              log,
-              ...prev.history,
-            ],
+            fffBuzzedPlayerId: null,
+            fffAttemptedPlayerIds: attempted,
+            history: [unlockLog, log, ...prev.history],
+          };
+        } else {
+          // All tied contestants attempted and missed this question!
+          // Draw the NEXT unused question from the board
+          const usedIds = [...(prev.fffUsedCardIds || []), prev.fffQuestion?.id].filter(Boolean) as string[];
+          const nextQuestion = getNextUnusedQuestion(prev.cards, usedIds);
+          const drawLog = createLog(
+            'info', 
+            `All tied contestants missed! Drawing next unused question: ${nextQuestion.category} • ${nextQuestion.points} PTS.`
+          );
+          return {
+            ...prev,
+            fffQuestion: nextQuestion,
+            fffBuzzedPlayerId: null,
+            fffAttemptedPlayerIds: [],
+            fffUsedCardIds: [...usedIds, nextQuestion.id],
+            history: [drawLog, log, ...prev.history],
           };
         }
-
-        return {
-          ...prev,
-          fffBuzzedPlayerId: null,
-          history: [log, ...prev.history],
-        };
       });
     }
   }, [state.fffBuzzedPlayerId, state.players]);
+
+  /**
+   * Draw the next unused question manually if contestants pass or skip
+   */
+  const skipToNextFFFQuestion = useCallback(() => {
+    sounds.playClick();
+    setState(prev => {
+      const usedIds = [...(prev.fffUsedCardIds || []), prev.fffQuestion?.id].filter(Boolean) as string[];
+      const nextQuestion = getNextUnusedQuestion(prev.cards, usedIds);
+      const log = createLog(
+        'info', 
+        `Skipped to next unused question: ${nextQuestion.category} • ${nextQuestion.points} PTS.`
+      );
+      return {
+        ...prev,
+        fffQuestion: nextQuestion,
+        fffBuzzedPlayerId: null,
+        fffAttemptedPlayerIds: [],
+        fffUsedCardIds: [...usedIds, nextQuestion.id],
+        history: [log, ...prev.history],
+      };
+    });
+  }, []);
 
   /**
    * Reset game to initial state
@@ -637,6 +710,7 @@ export function useGameState() {
     closeQuestionModal,
     buzzInFFF,
     submitFFFAnswer,
+    skipToNextFFFQuestion,
     resetGame,
     setCurrentPlayer,
     activeCard: state.cards.find(c => c.id === state.activeCardId) || null,

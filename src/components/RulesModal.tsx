@@ -95,7 +95,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
                 <Zap className="w-4 h-4 shrink-0 mt-0.5" />
                 <p>
-                  <strong>Single Deciding Question:</strong> Exactly 1 high-stakes question is presented. The first tied player to strike their buzzer button (or press their number key) gets 10 seconds to answer. A correct answer wins the entire championship instantly! If missed, the remaining tied players get to buzz in.
+                  <strong>Unused Grid Questions:</strong> Questions for Fastest Finger First are drawn directly from the unused questions remaining on the board! The first tied player to strike their buzzer button (or press their number key) gets 10 seconds to answer. A correct answer wins the entire championship instantly! If missed, the remaining tied players get to buzz in, or the next unused question is drawn if all miss.
                 </p>
               </div>
             </div>

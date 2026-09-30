@@ -70,5 +70,7 @@ export interface GameState {
   fffQuestion: QuestionItem | null;
   fffBuzzedPlayerId: number | null;
   fffTimer: number | null;
+  fffAttemptedPlayerIds?: number[];
+  fffUsedCardIds?: string[];
   history: LogEntry[];
 }
